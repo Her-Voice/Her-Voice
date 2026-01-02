@@ -39,6 +39,7 @@ export interface IncidentReport {
   perpetratorInfo: string;
   status: 'Draft' | 'Finalized';
   audioData?: string; // Base64 encoded audio
+  isSynced?: boolean;
 }
 
 export interface EmergencyContact {
@@ -53,6 +54,11 @@ export interface CheckInSettings {
   lastCheckInTime: string;
 }
 
+export interface VoiceSettings {
+  voiceName: 'Kore' | 'Puck' | 'Charon' | 'Fenrir' | 'Zephyr';
+  speakingRate: number;
+}
+
 export interface AppState {
   view: AppView;
   isDistressed: boolean;
@@ -63,4 +69,8 @@ export interface AppState {
   checkIn: CheckInSettings;
   isAuthenticated: boolean;
   user: User | null;
+  theme: 'light' | 'dark';
+  isOnline: boolean;
+  biometricEnabled: boolean;
+  voiceSettings: VoiceSettings;
 }

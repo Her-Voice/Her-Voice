@@ -2,13 +2,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import { encode, decode, decodeAudioData } from '../services/geminiService';
+import { VoiceSettings } from '../types';
 
-const API_KEY = process.env.API_KEY || "";
+interface LiveCompanionProps {
+  onDistress: (status: boolean) => void;
+  isOnline: boolean;
+  voiceSettings: VoiceSettings;
+}
 
-const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ onDistress }) => {
+const LiveCompanion: React.FC<LiveCompanionProps> = ({ onDistress, isOnline, voiceSettings }) => {
   const [isActive, setIsActive] = useState(false);
-  const [status, setStatus] = useState("Tap to start companion session");
-  const [transcription, setTranscription] = useState("");
+  const [status, setStatus] = useState("Tap to start digital safety monitoring");
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const sessionRef = useRef<any>(null);
@@ -17,10 +21,11 @@ const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ on
 
   const startSession = async () => {
     try {
-      setStatus("Initializing AI...");
+      setStatus("Initializing AI Companion...");
       setIsActive(true);
       
-      const ai = new GoogleGenAI({ apiKey: API_KEY });
+      // Initialize GoogleGenAI with the API key from environment variables
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       audioContextRef.current = outputCtx;
@@ -31,7 +36,7 @@ const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ on
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
         callbacks: {
           onopen: () => {
-            setStatus("I'm listening. Speak freely.");
+            setStatus("I'm right here with you. Speak if you need anything.");
             const source = inputCtx.createMediaStreamSource(stream);
             const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
             
@@ -46,6 +51,7 @@ const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ on
                 data: encode(new Uint8Array(int16.buffer)),
                 mimeType: 'audio/pcm;rate=16000',
               };
+              // Wait for sessionPromise to resolve before sending input
               sessionPromise.then(session => session.sendRealtimeInput({ media: pcmBlob }));
             };
             
@@ -53,7 +59,6 @@ const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ on
             scriptProcessor.connect(inputCtx.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
-            // Audio output logic
             const audioData = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
             if (audioData) {
               const ctx = outputCtx;
@@ -72,29 +77,26 @@ const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ on
               sourcesRef.current.clear();
               nextStartTimeRef.current = 0;
             }
-
-            // Handle metadata if any (distress signals, etc.)
-            // Note: In real app, we would use tool calls or hidden text responses
           },
           onerror: (e) => console.error("Session Error:", e),
           onclose: () => {
             setIsActive(false);
-            setStatus("Session ended.");
+            setStatus("Monitoring ended.");
           }
         },
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
-            voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
+            voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceSettings.voiceName } }
           },
-          systemInstruction: "You are HerVoice AI. Guide the user if they sound distressed. Offer breathing exercises if panicking. Use a calm, reassuring voice."
+          systemInstruction: "You are HerVoice AI. Guide the user if they sound distressed. Offer breathing exercises if panicking. Use a calm, reassuring voice. Your personality is that of a warm, reliable sister."
         }
       });
 
       sessionRef.current = await sessionPromise;
     } catch (err) {
       console.error(err);
-      setStatus("Error starting session.");
+      setStatus("Could not connect. Please check microphone.");
       setIsActive(false);
     }
   };
@@ -105,65 +107,63 @@ const LiveCompanion: React.FC<{ onDistress: (status: boolean) => void }> = ({ on
       sessionRef.current = null;
     }
     setIsActive(false);
-    setStatus("Session stopped.");
+    setStatus("Session completed.");
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 h-full space-y-12 animate-in slide-in-from-bottom-10">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold text-slate-800">Safety Companion</h2>
-        <p className="text-slate-500 max-w-xs">{status}</p>
+    <div className="flex flex-col items-center justify-center p-8 h-full space-y-12 animate-in slide-in-from-bottom-10 bg-brand-beige/20">
+      <div className="text-center space-y-3">
+        <h2 className="text-3xl font-serif text-brand-charcoal">Safety Guardian</h2>
+        <p className="text-brand-charcoal/50 max-w-[240px] text-sm leading-relaxed">{status}</p>
       </div>
 
-      <div className="relative flex items-center justify-center h-64 w-64">
+      <div className="relative flex items-center justify-center h-72 w-72">
         {/* Decorative Rings */}
-        <div className={`absolute inset-0 rounded-full border-2 border-purple-100 transition-transform duration-1000 ${isActive ? 'scale-110 opacity-100' : 'scale-75 opacity-0'}`}></div>
-        <div className={`absolute inset-4 rounded-full border-2 border-purple-200 transition-transform duration-700 delay-75 ${isActive ? 'scale-110 opacity-80' : 'scale-75 opacity-0'}`}></div>
+        <div className={`absolute inset-0 rounded-full border border-brand-rose/20 transition-transform duration-1000 ${isActive ? 'scale-110 opacity-100' : 'scale-75 opacity-0'}`}></div>
+        <div className={`absolute inset-6 rounded-full border border-brand-rose/40 transition-transform duration-700 delay-75 ${isActive ? 'scale-110 opacity-80' : 'scale-75 opacity-0'}`}></div>
         
         {/* Main Button */}
         <button
           onClick={isActive ? stopSession : startSession}
-          className={`relative z-10 w-48 h-48 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-2xl active:scale-95 ${
-            isActive ? 'bg-white text-red-500 border-4 border-red-500' : 'bg-purple-600 text-white'
+          className={`relative z-10 w-52 h-52 rounded-full flex flex-col items-center justify-center transition-all duration-500 shadow-[0_20px_50px_rgba(185,109,102,0.15)] active:scale-95 ${
+            isActive ? 'bg-white text-brand-rose border-4 border-brand-rose' : 'bg-brand-rose text-white'
           }`}
         >
-          <i className={`fa-solid ${isActive ? 'fa-stop text-4xl' : 'fa-microphone text-5xl'} mb-4`}></i>
-          <span className="text-sm font-bold uppercase tracking-widest">
-            {isActive ? 'Stop' : 'Connect'}
+          <div className="mb-4">
+             {isActive ? (
+                <div className="flex gap-1.5 items-center justify-center h-10">
+                   {[...Array(4)].map((_, i) => (
+                     <div key={i} className="w-1.5 bg-brand-rose rounded-full animate-bounce" style={{ animationDelay: `${i*0.1}s`, height: `${12+i*4}px` }}></div>
+                   ))}
+                </div>
+             ) : (
+                <i className="fa-solid fa-microphone text-5xl"></i>
+             )}
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">
+            {isActive ? 'Disconnect' : 'Connect'}
           </span>
         </button>
-
-        {isActive && (
-          <div className="absolute -bottom-8 waveform">
-            {[...Array(12)].map((_, i) => (
-              <div 
-                key={i} 
-                className="waveform-bar" 
-                style={{ animationDelay: `${i * 0.1}s`, height: `${Math.random() * 20 + 10}px` }}
-              ></div>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="w-full max-w-sm grid grid-cols-2 gap-4">
         <button 
           onClick={() => onDistress(true)}
-          className="p-4 bg-red-100 text-red-600 rounded-2xl flex flex-col items-center gap-2 font-bold shadow-sm"
+          className="p-5 bg-white text-brand-rose rounded-[2rem] border border-brand-rose/10 flex flex-col items-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-sm active:bg-brand-rose active:text-white transition-colors"
         >
-          <i className="fa-solid fa-bell"></i>
-          <span>PANIC</span>
+          <i className="fa-solid fa-bell text-xl"></i>
+          <span>Alert Emergency</span>
         </button>
         <button 
-          className="p-4 bg-blue-100 text-blue-600 rounded-2xl flex flex-col items-center gap-2 font-bold shadow-sm"
+          className="p-5 bg-white text-brand-charcoal/40 rounded-[2rem] border border-brand-rose/5 flex flex-col items-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-sm"
         >
-          <i className="fa-solid fa-map-pin"></i>
-          <span>LOCATION</span>
+          <i className="fa-solid fa-location-arrow text-xl"></i>
+          <span>Update Status</span>
         </button>
       </div>
       
-      <p className="text-xs text-slate-400 text-center italic">
-        "I'm right here with you, walking every step of the way."
+      <p className="text-[10px] text-brand-charcoal/30 text-center italic tracking-wide uppercase font-black">
+        "Walking beside you, every step of the way."
       </p>
     </div>
   );

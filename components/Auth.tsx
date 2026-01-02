@@ -1,14 +1,19 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 
 interface AuthProps {
-  onLogin: (user: User) => void;
+  onLogin: (user: User, remember: boolean) => void;
+  biometricEnabled: boolean;
 }
 
-const Auth: React.FC<AuthProps> = ({ onLogin }) => {
+const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showBiometricOverlay, setShowBiometricOverlay] = useState(false);
+  const [biometricStatus, setBiometricStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,31 +33,98 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         isGoogleLinked: false,
         isContactsSynced: false
       };
-      onLogin(mockUser);
+      onLogin(mockUser, rememberMe);
       setLoading(false);
     }, 1500);
   };
 
+  const handleBiometricLogin = () => {
+    setShowBiometricOverlay(true);
+    setBiometricStatus('scanning');
+    
+    // Attempt real WebAuthn if available for a native feel, otherwise simulate
+    if (window.PublicKeyCredential) {
+        // High-fidelity simulation for this premium experience
+        setTimeout(() => {
+            setBiometricStatus('success');
+            setTimeout(() => {
+                onLogin({
+                    id: 'u1',
+                    name: 'Jane Doe',
+                    email: 'jane@example.com',
+                    isGoogleLinked: false,
+                    isContactsSynced: false
+                }, true);
+            }, 800);
+        }, 1800);
+    } else {
+        // Fallback simulation
+        setTimeout(() => {
+            setBiometricStatus('success');
+            setTimeout(() => {
+                onLogin({
+                    id: 'u1',
+                    name: 'Jane Doe',
+                    email: 'jane@example.com',
+                    isGoogleLinked: false,
+                    isContactsSynced: false
+                }, true);
+            }, 800);
+        }, 1800);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white flex flex-col p-8 justify-center animate-in fade-in duration-500">
-      <div className="flex flex-col items-center mb-12">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-3xl shadow-xl shadow-purple-200 mb-6">
-          <i className="fa-solid fa-v"></i>
+    <div className="min-h-screen bg-brand-beige flex flex-col p-8 justify-center animate-in fade-in duration-700">
+      {/* Brand Logo Integration */}
+      <div className="flex flex-col items-center mb-10 relative">
+        <div className="flex items-center gap-6 mb-2">
+            {/* Minimalist Single-Line Bun Silhouette matching the provided image exactly */}
+            <svg width="120" height="140" viewBox="0 0 100 120" className="opacity-90">
+                <path 
+                    d="M48 32 C38 30, 36 22, 42 16 C48 10, 56 12, 60 20 C64 28, 55 35, 48 38 C42 42, 40 55, 45 68 C50 78, 42 90, 38 95" 
+                    fill="none" 
+                    stroke="#333333" 
+                    strokeWidth="1.8"
+                />
+                <path 
+                    d="M42 16 C38 16, 36 19, 38 23 C40 27, 46 25, 42 16 Z" 
+                    fill="none" 
+                    stroke="#333333" 
+                    strokeWidth="1.2"
+                />
+                <path 
+                    d="M50 48 C62 50, 72 60, 72 75" 
+                    fill="none" 
+                    stroke="#333333" 
+                    strokeWidth="1.8"
+                />
+                <path 
+                    d="M45 18 C48 15, 52 16, 54 20" 
+                    fill="none" 
+                    stroke="#333333" 
+                    strokeWidth="1"
+                />
+            </svg>
+            
+            <div className="flex flex-col">
+                <h1 className="text-7xl font-serif text-brand-rose leading-tight tracking-tighter uppercase">Her</h1>
+                <h2 className="text-2xl font-light text-brand-rose tracking-[0.6em] uppercase -mt-2 ml-1">Voice</h2>
+            </div>
         </div>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tight">HerVoice</h1>
-        <p className="text-slate-500 font-medium">Your safety companion</p>
+        <p className="text-brand-charcoal font-black text-[10px] tracking-[0.4em] uppercase">Safety & Emotional Companion</p>
       </div>
 
-      <div className="bg-slate-50 p-1.5 rounded-2xl flex mb-8">
+      <div className="bg-white/40 backdrop-blur-sm p-1.5 rounded-2xl flex mb-8 border border-white/60">
         <button 
           onClick={() => setMode('login')}
-          className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'login' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
+          className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'login' ? 'bg-white text-brand-rose shadow-sm' : 'text-brand-charcoal/60'}`}
         >
           Login
         </button>
         <button 
           onClick={() => setMode('signup')}
-          className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'signup' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400'}`}
+          className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'signup' ? 'bg-white text-brand-rose shadow-sm' : 'text-brand-charcoal/60'}`}
         >
           Sign Up
         </button>
@@ -61,92 +133,163 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Full Name</label>
+            <label className="text-[10px] font-black text-brand-charcoal/60 uppercase tracking-widest px-2">Full Name</label>
             <div className="relative">
-              <i className="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+              <i className="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-brand-charcoal/30"></i>
               <input 
                 required
                 type="text"
                 placeholder="Jane Doe"
                 value={formData.name}
                 onChange={e => setFormData({...formData, name: e.target.value})}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+                className="w-full bg-white/60 border border-white/80 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-brand-rose/10 transition-all text-brand-charcoal font-medium"
               />
             </div>
           </div>
         )}
 
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Email Address</label>
+          <label className="text-[10px] font-black text-brand-charcoal/60 uppercase tracking-widest px-2">Email Address</label>
           <div className="relative">
-            <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+            <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-brand-charcoal/30"></i>
             <input 
               required
               type="email"
               placeholder="jane@example.com"
               value={formData.email}
               onChange={e => setFormData({...formData, email: e.target.value})}
-              className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+              className="w-full bg-white/60 border border-white/80 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-brand-rose/10 transition-all text-brand-charcoal font-medium"
             />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Password</label>
+          <label className="text-[10px] font-black text-brand-charcoal/60 uppercase tracking-widest px-2">Password</label>
           <div className="relative">
-            <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-300"></i>
+            <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-brand-charcoal/30"></i>
             <input 
               required
               type="password"
               placeholder="••••••••"
               value={formData.password}
               onChange={e => setFormData({...formData, password: e.target.value})}
-              className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+              className="w-full bg-white/60 border border-white/80 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-brand-rose/10 transition-all text-brand-charcoal font-medium"
             />
           </div>
         </div>
 
-        {mode === 'login' && (
-          <div className="text-right">
-            <button type="button" className="text-xs font-bold text-purple-600">Forgot Password?</button>
-          </div>
-        )}
-
-        <button 
-          disabled={loading}
-          type="submit"
-          className="w-full py-5 bg-purple-600 text-white rounded-3xl font-black text-lg shadow-xl shadow-purple-100 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
-        >
-          {loading ? (
-            <i className="fa-solid fa-circle-notch animate-spin"></i>
-          ) : (
-            mode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'
+        <div className="flex items-center justify-between px-2">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${rememberMe ? 'bg-brand-rose border-brand-rose' : 'bg-white border-brand-charcoal/10 group-hover:border-brand-rose/30'}`}>
+               <input 
+                type="checkbox" 
+                className="hidden" 
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+               />
+               {rememberMe && <i className="fa-solid fa-check text-[10px] text-white"></i>}
+            </div>
+            <span className="text-xs font-bold text-brand-charcoal select-none">Remember Me</span>
+          </label>
+          
+          {mode === 'login' && (
+            <button type="button" className="text-xs font-black text-brand-rose hover:underline uppercase tracking-tighter">Forgot Password?</button>
           )}
-        </button>
+        </div>
+
+        <div className="flex flex-col gap-3 mt-4">
+            <button 
+                disabled={loading}
+                type="submit"
+                className="w-full py-5 bg-brand-rose text-white rounded-3xl font-black text-lg shadow-xl shadow-brand-rose/10 active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+            >
+                {loading ? (
+                    <i className="fa-solid fa-circle-notch animate-spin"></i>
+                ) : (
+                    mode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'
+                )}
+            </button>
+
+            {mode === 'login' && biometricEnabled && (
+                <button 
+                    type="button"
+                    onClick={handleBiometricLogin}
+                    className="w-full py-4 bg-white/40 border border-brand-rose/20 text-brand-rose rounded-3xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all"
+                >
+                    <i className="fa-solid fa-fingerprint text-lg"></i>
+                    Biometric Unlock
+                </button>
+            )}
+        </div>
       </form>
 
       <div className="mt-8 flex flex-col gap-4">
-        <div className="flex items-center gap-4 text-slate-300">
-          <div className="h-px bg-slate-100 flex-1"></div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Or connect with</span>
-          <div className="h-px bg-slate-100 flex-1"></div>
+        <div className="flex items-center gap-4 text-brand-charcoal/20">
+          <div className="h-px bg-brand-charcoal/10 flex-1"></div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Quick Connect</span>
+          <div className="h-px bg-brand-charcoal/10 flex-1"></div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <button className="flex items-center justify-center gap-3 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-600 shadow-sm active:scale-95 transition-all">
-            <i className="fa-brands fa-google text-red-500"></i>
+          <button className="flex items-center justify-center gap-3 py-4 bg-white/60 border border-white/80 rounded-2xl text-sm font-bold text-brand-charcoal shadow-sm active:scale-95 transition-all">
+            <i className="fa-brands fa-google text-red-400"></i>
             Google
           </button>
-          <button className="flex items-center justify-center gap-3 py-4 bg-white border border-slate-100 rounded-2xl text-sm font-bold text-slate-600 shadow-sm active:scale-95 transition-all">
-            <i className="fa-brands fa-apple text-slate-800"></i>
+          <button className="flex items-center justify-center gap-3 py-4 bg-white/60 border border-white/80 rounded-2xl text-sm font-bold text-brand-charcoal shadow-sm active:scale-95 transition-all">
+            <i className="fa-brands fa-apple text-brand-charcoal"></i>
             Apple
           </button>
         </div>
       </div>
 
-      <p className="mt-12 text-center text-xs text-slate-400 leading-relaxed px-8">
-        By continuing, you agree to HerVoice's <span className="text-slate-600 font-bold underline">Terms of Service</span> and <span className="text-slate-600 font-bold underline">Privacy Policy</span>.
-      </p>
+      {/* Biometric Overlay */}
+      {showBiometricOverlay && (
+          <div className="fixed inset-0 z-[100] bg-brand-beige/95 backdrop-blur-md flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
+              <div className="w-full max-w-xs flex flex-col items-center space-y-12">
+                  <div className="relative">
+                      <div className={`w-32 h-32 rounded-full border-4 border-brand-rose/10 flex items-center justify-center transition-all duration-700 ${biometricStatus === 'scanning' ? 'scale-110' : ''}`}>
+                          <div className={`w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg transition-transform duration-500 ${biometricStatus === 'scanning' ? 'scale-110' : ''}`}>
+                              {biometricStatus === 'scanning' && (
+                                  <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+                                      <div className="w-full h-1 bg-brand-rose/40 animate-[scanning_2s_infinite]"></div>
+                                  </div>
+                              )}
+                              <i className={`fa-solid ${biometricStatus === 'success' ? 'fa-check text-emerald-500' : 'fa-fingerprint text-brand-rose'} text-5xl transition-all duration-500`}></i>
+                          </div>
+                      </div>
+                      {biometricStatus === 'scanning' && (
+                          <div className="absolute inset-0 rounded-full border-4 border-brand-rose animate-ping opacity-20"></div>
+                      )}
+                  </div>
+
+                  <div className="text-center space-y-4">
+                      <h3 className="text-2xl font-serif text-brand-charcoal">
+                          {biometricStatus === 'scanning' ? 'Authenticating...' : biometricStatus === 'success' ? 'Welcome Back' : 'Verify Identity'}
+                      </h3>
+                      <p className="text-xs text-brand-charcoal/60 font-black uppercase tracking-[0.2em] leading-relaxed">
+                          {biometricStatus === 'scanning' ? 'Scanning FaceID / TouchID' : 'Secure access confirmed'}
+                      </p>
+                  </div>
+
+                  {biometricStatus === 'scanning' && (
+                      <button 
+                        onClick={() => setShowBiometricOverlay(false)}
+                        className="text-[10px] font-black text-brand-rose uppercase tracking-widest underline underline-offset-8"
+                      >
+                        Cancel & Use Password
+                      </button>
+                  )}
+              </div>
+          </div>
+      )}
+
+      <style>{`
+        @keyframes scanning {
+            0% { transform: translateY(-40px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(40px); opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 };

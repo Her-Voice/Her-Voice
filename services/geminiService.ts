@@ -1,8 +1,6 @@
 
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 
-const API_KEY = process.env.API_KEY || "";
-
 // Base config for HerVoice AI personality
 const HERVOICE_SYSTEM_PROMPT = `You are HerVoice.AI, a compassionate digital companion for urban women's safety and wellbeing, specifically designed for contexts like Nairobi, Kenya.
 Your mission is to provide:
@@ -13,7 +11,8 @@ Always use a warm, empathetic tone. Avoid clinical jargon. Validate their feelin
 In grounding mode: speak slowly, guide breathing (4-7-8 method), and offer localized affirmations.`;
 
 export const getGeminiResponse = async (prompt: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  // Always use process.env.API_KEY directly when initializing GoogleGenAI
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response: GenerateContentResponse = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
@@ -25,8 +24,30 @@ export const getGeminiResponse = async (prompt: string): Promise<string> => {
   return response.text || "I'm sorry, I couldn't process that. I'm here for you.";
 };
 
+export const getLocationSafetyTip = async (lat: number, lng: number): Promise<string> => {
+  try {
+    // Always use process.env.API_KEY directly when initializing GoogleGenAI
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Provide one concise, practical safety tip for a woman currently at coordinates ${lat}, ${lng}. 
+      If the coordinates are in a specific city like Nairobi, mention local context if relevant. 
+      Keep it under 100 characters. Be empathetic but direct.`,
+      config: {
+        systemInstruction: "You are a local safety expert for HerVoice.AI. Provide a single, helpful safety tip based on the user's location.",
+        temperature: 0.8,
+      }
+    });
+    return response.text?.trim() || "Stay aware of your surroundings and trust your intuition.";
+  } catch (error) {
+    console.error("Failed to get safety tip:", error);
+    return "Stay in well-lit areas and keep your phone charged while traveling.";
+  }
+};
+
 export const generateIncidentReport = async (rawTranscript: string, locationData: any): Promise<any> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  // Always use process.env.API_KEY directly when initializing GoogleGenAI
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Transform this raw transcript into a structured safety report. 
