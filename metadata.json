@@ -1,0 +1,8 @@
+{
+  "name": "HerVoice.AI",
+  "description": "An AI digital companion for women's safety and emotional wellbeing, providing real-time distress detection, grounding exercises, and non-invasive incident documentation.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}
