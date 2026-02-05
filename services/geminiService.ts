@@ -1,6 +1,5 @@
 
-import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-
+// Frontend proxy service: call server-side proxy at /api/gemini
 // Base config for HerVoice AI personality
 const HERVOICE_SYSTEM_PROMPT = `You are HerVoice.AI, a compassionate digital companion for urban women's safety and wellbeing, specifically designed for contexts like Nairobi, Kenya.
 Your mission is to provide:
@@ -10,35 +9,39 @@ Your mission is to provide:
 Always use a warm, empathetic tone. Avoid clinical jargon. Validate their feelings.
 In grounding mode: speak slowly, guide breathing (4-7-8 method), and offer localized affirmations.`;
 
+async function callProxy(payload: any) {
+  try {
+    const token = (import.meta as any).env?.VITE_PROXY_TOKEN || '';
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-app-token': token },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Proxy returned ${res.status}`);
+    }
+    const data = await res.json();
+    return data.text || '';
+  } catch (err) {
+    console.error('Failed to call Gemini proxy:', err);
+    throw err;
+  }
+}
+
 export const getGeminiResponse = async (prompt: string): Promise<string> => {
-  // Always use process.env.API_KEY directly when initializing GoogleGenAI
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response: GenerateContentResponse = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: prompt,
-    config: {
-      systemInstruction: HERVOICE_SYSTEM_PROMPT,
-      temperature: 0.7,
-    },
-  });
-  return response.text || "I'm sorry, I couldn't process that. I'm here for you.";
+  try {
+    const text = await callProxy({ type: 'chat', prompt, config: { systemInstruction: HERVOICE_SYSTEM_PROMPT, temperature: 0.7 } });
+    return text || "I'm sorry, I couldn't process that. I'm here for you.";
+  } catch (err) {
+    return "I'm sorry, I couldn't process that. I'm here for you.";
+  }
 };
 
 export const getLocationSafetyTip = async (lat: number, lng: number): Promise<string> => {
   try {
-    // Always use process.env.API_KEY directly when initializing GoogleGenAI
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Provide one concise, practical safety tip for a woman currently at coordinates ${lat}, ${lng}. 
-      If the coordinates are in a specific city like Nairobi, mention local context if relevant. 
-      Keep it under 100 characters. Be empathetic but direct.`,
-      config: {
-        systemInstruction: "You are a local safety expert for HerVoice.AI. Provide a single, helpful safety tip based on the user's location.",
-        temperature: 0.8,
-      }
-    });
-    return response.text?.trim() || "Stay aware of your surroundings and trust your intuition.";
+    const text = await callProxy({ type: 'safety', lat, lng, config: { temperature: 0.8 } });
+    return text?.trim() || "Stay aware of your surroundings and trust your intuition.";
   } catch (error) {
     console.error("Failed to get safety tip:", error);
     return "Stay in well-lit areas and keep your phone charged while traveling.";
@@ -46,8 +49,14 @@ export const getLocationSafetyTip = async (lat: number, lng: number): Promise<st
 };
 
 export const generateIncidentReport = async (rawTranscript: string, locationData: any): Promise<any> => {
-  // Always use process.env.API_KEY directly when initializing GoogleGenAI
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  try {
+    const prompt = `Summarize the following transcript into an incident report:\n\n${rawTranscript}`;
+    const text = await callProxy({ type: 'report', prompt, config: { systemInstruction: HERVOICE_SYSTEM_PROMPT } });
+    return { summary: text };
+  } catch (err) {
+    console.error('Failed to generate incident report:', err);
+    return { summary: '' };
+  }
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Transform this raw transcript into a structured safety report. 
