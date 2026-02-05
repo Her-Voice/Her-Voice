@@ -334,10 +334,34 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen ${state.theme === 'dark' ? 'bg-slate-950' : 'bg-brand-beige'} overflow-x-hidden flex flex-col max-w-md mx-auto relative shadow-2xl ring-1 ring-slate-200/20 transition-colors duration-300`}>
-      <main className="flex-1 bg-white dark:bg-slate-900 flex flex-col h-full overflow-hidden transition-colors duration-300">
-        {/* Persistent Global Header */}
-        <header className="sticky top-0 z-[70] glass dark:bg-slate-900/90 border-b border-brand-beige/20 dark:border-slate-800 px-4 py-3 flex justify-between items-center transition-colors duration-300">
+    <div className={`min-h-screen ${state.theme === 'dark' ? 'bg-slate-950' : 'bg-brand-beige'} transition-colors duration-300`}>
+      <main className="h-screen flex flex-col lg:flex-row overflow-hidden transition-colors duration-300">
+        {/* Sidebar Navigation - Desktop Only */}
+        <nav className="hidden lg:flex flex-col w-24 bg-white dark:bg-slate-900 border-r border-brand-rose/10 flex-shrink-0 py-6 px-2 gap-4 sticky left-0 top-0 h-screen overflow-y-auto">
+          {[
+            { view: AppView.DASHBOARD, icon: 'fa-house', label: 'Home' },
+            { view: AppView.LIVE_COMPANION, icon: 'fa-microphone', label: 'Safe' },
+            { view: AppView.INCIDENT_VAULT, icon: 'fa-file-shield', label: 'Vault' },
+            { view: AppView.WELLBEING_CHAT, icon: 'fa-heart', label: 'Chat' },
+            { view: AppView.SETTINGS, icon: 'fa-gear', label: 'More' },
+          ].map((item) => (
+            <button
+              key={item.view}
+              onClick={() => setView(item.view)}
+              className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
+                state.view === item.view ? 'bg-brand-rose/10 text-brand-rose' : 'text-brand-charcoal/70 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <i className={`fa-solid ${item.icon} text-lg`}></i>
+              <span className="text-[8px] font-bold uppercase tracking-tight text-center">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Main Content Area */}
+        <div className="flex flex-col flex-1 overflow-hidden max-w-full lg:max-w-7xl lg:mx-auto lg:w-full">
+          {/* Persistent Global Header */}
+          <header className="sticky top-0 z-[70] glass dark:bg-slate-900/90 border-b border-brand-beige/20 dark:border-slate-800 px-4 py-3 flex justify-between items-center transition-colors duration-300 lg:px-8">
           <div 
             className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
             onClick={() => setView(AppView.DASHBOARD)}
@@ -375,9 +399,40 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto bg-brand-beige/50 dark:bg-slate-900">
           {renderView()}
         </div>
+        </div>
       </main>
 
-      <Navigation currentView={state.view} setView={setView} />
+      {/* Navigation Bar - Mobile Only */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass border-t border-brand-rose/10 flex justify-around items-center px-4 py-4 z-50 bg-white/95 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
+        {[
+          { view: AppView.DASHBOARD, icon: 'fa-house', label: 'Home' },
+          { view: AppView.LIVE_COMPANION, icon: 'fa-microphone', label: 'Safe' },
+          { view: AppView.INCIDENT_VAULT, icon: 'fa-file-shield', label: 'Vault' },
+          { view: AppView.WELLBEING_CHAT, icon: 'fa-heart', label: 'Chat' },
+          { view: AppView.SETTINGS, icon: 'fa-gear', label: 'More' },
+        ].map((item) => (
+          <button
+            key={item.view}
+            onClick={() => setView(item.view)}
+            className={`flex-1 flex flex-col items-center gap-1.5 transition-all active:scale-90 ${
+              state.view === item.view ? 'text-brand-rose' : 'text-brand-charcoal/70'
+            }`}
+          >
+            <div className="relative">
+              <i className={`fa-solid ${item.icon} ${state.view === item.view ? 'text-xl' : 'text-lg'}`}></i>
+              {item.view === AppView.WELLBEING_CHAT && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-rose rounded-full border-2 border-white"></span>
+              )}
+            </div>
+            <span className={`text-[9px] font-bold uppercase tracking-[0.15em] ${state.view === item.view ? 'opacity-100' : 'opacity-100 text-brand-charcoal'}`}>
+              {item.label}
+            </span>
+            {state.view === item.view && (
+              <div className="w-1.5 h-1.5 bg-brand-rose rounded-full mt-0.5"></div>
+            )}
+          </button>
+        ))}
+      </nav>
       
       {state.isDistressed && (
         <div className="fixed top-0 left-0 right-0 bg-brand-rose text-white text-[10px] font-black py-1 px-4 text-center z-[80] tracking-[0.2em] animate-pulse uppercase">

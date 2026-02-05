@@ -156,7 +156,7 @@ const GroundingExercises: React.FC<GroundingExercisesProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="p-6 pb-24 h-full relative overflow-hidden flex flex-col">
+    <div className="p-6 lg:p-12 pb-24 lg:pb-12 h-full relative overflow-hidden flex flex-col max-w-6xl mx-auto w-full">
       {activeExercise === 'menu' && (
         <button 
           onClick={onBack}
