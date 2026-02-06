@@ -43,7 +43,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setView, reports, isDistressed, h
   };
 
   return (
-    <div className="p-6 pb-28 space-y-8 animate-in fade-in duration-500">
+    <div className="p-6 lg:p-12 pb-28 lg:pb-12 space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto w-full">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-serif text-brand-charcoal">Hello, Sister</h1>
@@ -145,7 +145,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setView, reports, isDistressed, h
       {/* Feature Grid */}
       <section>
         <h3 className="text-[10px] font-black text-brand-charcoal/50 uppercase tracking-[0.2em] mb-4 ml-2">Digital Tools</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <button 
             onClick={() => setView(AppView.WELLBEING_CHAT)}
             className="p-6 bg-white rounded-[2rem] border border-brand-rose/5 flex flex-col items-center gap-4 shadow-sm hover:shadow-md transition-all text-center"

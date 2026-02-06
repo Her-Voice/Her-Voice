@@ -38,6 +38,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; }
+        html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
@@ -68,6 +70,11 @@
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: rgba(185, 109, 102, 0.2);
             border-radius: 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            main { padding-bottom: 80px; /* Space for bottom nav */ }
         }
     </style>
 </head>

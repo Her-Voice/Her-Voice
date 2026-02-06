@@ -39,7 +39,7 @@ const WellbeingChat: React.FC<WellbeingChatProps> = ({ setView, isOnline }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-brand-beige/20 relative">
+    <div className="flex flex-col h-full bg-brand-beige/20 relative max-w-6xl mx-auto w-full">
       <header className="p-4 border-b border-brand-rose/10 flex items-center justify-between glass sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-brand-beige flex items-center justify-center text-brand-rose shadow-sm">

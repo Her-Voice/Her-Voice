@@ -110,7 +110,7 @@ const IncidentVault: React.FC<IncidentVaultProps> = ({
   };
 
   return (
-    <div className="p-6 pb-24 space-y-8 animate-in fade-in duration-500">
+    <div className="p-6 lg:p-12 pb-24 lg:pb-12 space-y-8 animate-in fade-in duration-500 max-w-6xl mx-auto w-full">
       <header className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-serif text-brand-charcoal">Secure Vault</h2>

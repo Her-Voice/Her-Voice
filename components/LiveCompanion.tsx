@@ -111,7 +111,7 @@ const LiveCompanion: React.FC<LiveCompanionProps> = ({ onDistress, isOnline, voi
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 h-full space-y-12 animate-in slide-in-from-bottom-10 bg-brand-beige/20">
+    <div className="flex flex-col items-center justify-center p-8 lg:p-16 h-full space-y-12 animate-in slide-in-from-bottom-10 bg-brand-beige/20 max-w-6xl mx-auto w-full">
       <div className="text-center space-y-3">
         <h2 className="text-3xl font-serif text-brand-charcoal">Safety Guardian</h2>
         <p className="text-brand-charcoal/50 max-w-[240px] text-sm leading-relaxed">{status}</p>

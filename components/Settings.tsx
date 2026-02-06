@@ -128,7 +128,7 @@ const Settings: React.FC<SettingsProps> = ({
   const availableVoices: VoiceSettings['voiceName'][] = ['Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'];
 
   return (
-    <div className="p-6 pb-24 space-y-6 animate-in fade-in duration-300 dark:bg-slate-900">
+    <div className="p-6 lg:p-12 pb-24 lg:pb-12 space-y-6 animate-in fade-in duration-300 dark:bg-slate-900 max-w-6xl mx-auto w-full">
       <header className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Settings</h2>
