@@ -54,7 +54,7 @@ export default async function handler(req, res) {
         }
 
         if (type === 'tts') {
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: contents }] }],
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
 
         // Initialize the model with systemInstruction
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             systemInstruction: systemInstruction
         });
 
