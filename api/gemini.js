@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai'; // Check if this package name is correct intended. The syntax requested matches @google/generative-ai more.
+import { GoogleGenerativeAI } from '@google/generative-ai'; // Check if this package name is correct intended. The syntax requested matches @google/generative-ai more.
 // Assuming the user meant @google/generative-ai or the package alias works.
 // However, to be safe and strictly follow "Update api/gemini.js", I will use the existing import but change usage.
 // If the user *meant* @google/generative-ai, I should probably check package.json again. 
@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Initialize the Google Generative AI client
-const genAI = new GoogleGenAI(process.env.GOOGLE_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 // Basic protections
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
@@ -64,6 +64,10 @@ export default async function handler(req, res) {
             systemInstruction: systemInstruction
         });
 
+        console.log("genAI instance:", genAI);
+        console.log("genAI methods:", Object.keys(genAI));
+        console.log("getGenerativeModel type:", typeof genAI.getGenerativeModel);
+
         // Safety: avoid hanging indefinitely when upstream is slow
         const callPromise = model.generateContent({
             contents: [{ role: 'user', parts: [{ text: contents }] }],
@@ -71,6 +75,8 @@ export default async function handler(req, res) {
                 temperature: (config && config.temperature) || 0.7,
             },
         });
+
+
 
         const timeoutMs = 25000;
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Upstream timeout')), timeoutMs));
@@ -89,3 +95,4 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: err.message || String(err) });
     }
 }
+
