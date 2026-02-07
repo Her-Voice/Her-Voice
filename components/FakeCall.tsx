@@ -29,7 +29,6 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
 
       const model = ai.getGenerativeModel({
         model: "gemini-2.5-flash-preview-tts",
-        // @ts-ignore - Experimental features not yet in types
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: {
@@ -37,7 +36,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
               prebuiltVoiceConfig: { voiceName: voiceSettings.voiceName },
             },
           },
-        }
+        } as any,
       });
 
       const result = await model.generateContent({
