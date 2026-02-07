@@ -57,27 +57,7 @@ export const generateIncidentReport = async (rawTranscript: string, locationData
     console.error('Failed to generate incident report:', err);
     return { summary: '' };
   }
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: `Transform this raw transcript into a structured safety report. 
-    Transcript: "${rawTranscript}"
-    Location: ${JSON.stringify(locationData)}
-    Extract: Time, Location, Incident Description, Context, Perpetrator Info.`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          description: { type: Type.STRING },
-          context: { type: Type.STRING },
-          perpetratorInfo: { type: Type.STRING },
-          timestamp: { type: Type.STRING },
-        },
-        required: ["description", "context", "perpetratorInfo"]
-      }
-    }
-  });
-  return JSON.parse(response.text || "{}");
+
 };
 
 // --- Audio Utilities for Live API ---
