@@ -9,7 +9,9 @@ Your mission is to provide:
 Always use a warm, empathetic tone. Avoid clinical jargon. Validate their feelings.
 In grounding mode: speak slowly, guide breathing (4-7-8 method), and offer localized affirmations.`;
 
-async function callProxy(payload: any) {
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function callProxy(payload: any, isRetry = false) {
   try {
     const token = (import.meta as any).env?.VITE_PROXY_TOKEN || '';
     const res = await fetch('/api/gemini', {
@@ -17,6 +19,13 @@ async function callProxy(payload: any) {
       headers: { 'Content-Type': 'application/json', 'x-app-token': token },
       body: JSON.stringify(payload),
     });
+
+    if (res.status === 429 && !isRetry) {
+      console.warn("Received 429 Too Many Requests. Retrying in 25 seconds...");
+      await wait(25000);
+      return callProxy(payload, true);
+    }
+
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || `Proxy returned ${res.status}`);
