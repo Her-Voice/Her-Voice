@@ -47,7 +47,7 @@ app.post('/api/gemini', async (req, res) => {
 
     if (type === 'tts') {
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash-exp', // Using 2.0-flash-exp as a stable fallback for 2.5 preview if needed, or stick to user's 2.5 if confident.
+        model: 'gemini-2.5-flash', // Updated to gemini-2.5-flash (2.0-flash-exp scheduled for shutdown March 2026)
         // formatting as any to avoid TS issues in JS file if checked
       });
 
@@ -74,7 +74,7 @@ app.post('/api/gemini', async (req, res) => {
 
     // Initialize the model
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction: systemInstruction,
     });
 
@@ -94,8 +94,6 @@ app.post('/api/gemini', async (req, res) => {
     const text = response.text();
 
     return res.json({ text: text || '' });
-
-    return res.json({ text: response.text || '' });
   } catch (err) {
     console.error('Gemini proxy error:', err);
     return res.status(500).json({ error: err.message || String(err) });
