@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { AppView, VoiceSettings } from '../types';
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { decode, decodeAudioData } from '../services/geminiService';
 
 interface FakeCallProps {
@@ -16,29 +16,35 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
   const [delay, setDelay] = useState(0); // in seconds
   const [timeLeft, setTimeLeft] = useState(0);
   const [callDuration, setCallDuration] = useState(0);
-  
+
   const audioContextRef = useRef<AudioContext | null>(null);
   const incomingTimeoutRef = useRef<number | null>(null);
 
   // Gemini TTS logic
   const playFakeVoice = async () => {
     try {
-      // Initialize GoogleGenAI with the API key from environment variables
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      // Initialize GoogleGenerativeAI with the API key from environment variables
+      const ai = new GoogleGenerativeAI(process.env.API_KEY || '');
       const prompt = `Say: Hey, it's me. I'm just calling to see where you are. We're all here at the restaurant waiting for you. Are you close by? Don't be too long!`;
-      
-      const response = await ai.models.generateContent({
+
+      const model = ai.getGenerativeModel({
         model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: prompt }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
+        // @ts-ignore - Experimental features not yet in types
+        generationConfig: {
+          responseModalities: ["AUDIO"],
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: voiceSettings.voiceName },
             },
           },
-        },
+        }
       });
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+
+      const response = result.response;
 
       const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (audioData) {
@@ -126,18 +132,17 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Caller Identity</label>
             <div className="grid grid-cols-2 gap-3">
               {['Mom', 'Work', 'Home', 'Dad'].map(name => (
-                <button 
+                <button
                   key={name}
                   onClick={() => setCallerName(name)}
-                  className={`py-4 rounded-2xl border font-bold transition-all ${
-                    callerName === name ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-slate-100 text-slate-500'
-                  }`}
+                  className={`py-4 rounded-2xl border font-bold transition-all ${callerName === name ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-slate-100 text-slate-500'
+                    }`}
                 >
                   {name}
                 </button>
               ))}
             </div>
-            <input 
+            <input
               type="text"
               placeholder="Custom Caller Name..."
               value={['Mom', 'Work', 'Home', 'Dad'].includes(callerName) ? '' : callerName}
@@ -153,11 +158,10 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
                 <button
                   key={s}
                   onClick={() => setDelay(s)}
-                  className={`py-3 text-xs font-bold rounded-xl border transition-all ${
-                    delay === s ? 'bg-green-600 text-white border-green-600 shadow-lg shadow-green-100' : 'bg-white border-slate-100 text-slate-500'
-                  }`}
+                  className={`py-3 text-xs font-bold rounded-xl border transition-all ${delay === s ? 'bg-green-600 text-white border-green-600 shadow-lg shadow-green-100' : 'bg-white border-slate-100 text-slate-500'
+                    }`}
                 >
-                  {s === 0 ? 'Now' : (s < 60 ? `${s}s` : `${s/60}m`)}
+                  {s === 0 ? 'Now' : (s < 60 ? `${s}s` : `${s / 60}m`)}
                 </button>
               ))}
             </div>
@@ -171,7 +175,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
           </div>
         </div>
 
-        <button 
+        <button
           onClick={startSequence}
           className="w-full py-5 bg-green-600 text-white rounded-3xl font-black text-lg shadow-xl shadow-green-200 active:scale-95 transition-transform"
         >
@@ -186,7 +190,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
       <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col items-center justify-center p-8 text-white">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 rounded-full border-4 border-slate-700 flex items-center justify-center">
-             <i className="fa-solid fa-hourglass-start animate-spin text-xl text-slate-500"></i>
+            <i className="fa-solid fa-hourglass-start animate-spin text-xl text-slate-500"></i>
           </div>
           <p className="text-sm font-medium text-slate-400">Triggering call in {timeLeft}s...</p>
           <p className="text-[10px] text-slate-600 uppercase tracking-widest">You can lock your screen now</p>
@@ -201,7 +205,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
       <div className="fixed inset-0 z-[300] bg-slate-900 animate-in fade-in duration-700 overflow-hidden">
         {/* Animated Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-slate-800 via-slate-900 to-black opacity-90"></div>
-        
+
         <div className="relative h-full flex flex-col items-center justify-between py-24 px-8 text-white">
           <div className="text-center space-y-2">
             <p className="text-xs font-medium text-blue-400 uppercase tracking-[0.3em] animate-pulse">Incoming Call</p>
@@ -216,7 +220,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
 
           <div className="w-full flex justify-around items-center px-4">
             <div className="flex flex-col items-center gap-4">
-              <button 
+              <button
                 onClick={declineCall}
                 className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center text-3xl shadow-2xl shadow-red-500/20 active:scale-90 transition-transform"
               >
@@ -224,9 +228,9 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
               </button>
               <span className="text-xs font-bold text-slate-400 uppercase">Decline</span>
             </div>
-            
+
             <div className="flex flex-col items-center gap-4">
-              <button 
+              <button
                 onClick={acceptCall}
                 className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center text-3xl shadow-2xl shadow-green-500/30 animate-bounce active:scale-90 transition-transform"
               >
@@ -267,7 +271,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
         </div>
 
         <div className="flex flex-col items-center gap-6">
-           <button 
+          <button
             onClick={onBack}
             className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center text-3xl shadow-2xl shadow-red-500/20 active:scale-90 transition-transform"
           >
@@ -290,7 +294,7 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
             <p className="text-slate-400 text-sm font-medium">{callerName}</p>
             <p className="text-[10px] text-slate-500 uppercase tracking-widest pt-1">Just Now</p>
           </div>
-          <button 
+          <button
             onClick={onBack}
             className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform"
           >
