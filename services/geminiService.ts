@@ -57,6 +57,20 @@ export const getLocationSafetyTip = async (lat: number, lng: number): Promise<st
   }
 };
 
+export const generateSpeech = async (text: string, voiceName: string): Promise<string> => {
+  try {
+    const response = await callProxy({
+      type: 'tts',
+      prompt: text,
+      config: { voiceName }
+    });
+    return response.audioData || '';
+  } catch (err) {
+    console.error('Failed to generate speech:', err);
+    return '';
+  }
+};
+
 export const generateIncidentReport = async (rawTranscript: string, locationData: any): Promise<any> => {
   try {
     const prompt = `Summarize the following transcript into an incident report:\n\n${rawTranscript}`;

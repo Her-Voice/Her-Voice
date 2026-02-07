@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { AppView, VoiceSettings } from '../types';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { decode, decodeAudioData } from '../services/geminiService';
+import { decode, decodeAudioData, generateSpeech } from '../services/geminiService';
 
 interface FakeCallProps {
   onBack: () => void;
@@ -23,29 +22,10 @@ const FakeCall: React.FC<FakeCallProps> = ({ onBack, isOnline, voiceSettings }) 
   // Gemini TTS logic
   const playFakeVoice = async () => {
     try {
-      // Initialize GoogleGenerativeAI with the API key from environment variables
-      const ai = new GoogleGenerativeAI(process.env.API_KEY || '');
       const prompt = `Say: Hey, it's me. I'm just calling to see where you are. We're all here at the restaurant waiting for you. Are you close by? Don't be too long!`;
 
-      const model = ai.getGenerativeModel({
-        model: "gemini-2.5-flash-preview-tts",
-        generationConfig: {
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: voiceSettings.voiceName },
-            },
-          },
-        } as any,
-      });
+      const audioData = await import('../services/geminiService').then(m => m.generateSpeech(prompt, voiceSettings.voiceName));
 
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      });
-
-      const response = result.response;
-
-      const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (audioData) {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
         const buffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);

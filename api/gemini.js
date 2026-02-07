@@ -1,9 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'; // Check if this package name is correct intended. The syntax requested matches @google/generative-ai more.
-// Assuming the user meant @google/generative-ai or the package alias works.
-// However, to be safe and strictly follow "Update api/gemini.js", I will use the existing import but change usage.
-// If the user *meant* @google/generative-ai, I should probably check package.json again. 
-// package.json has "@google/genai". 
-// I will assume the user knows the method `getGenerativeModel` exists on the instance.
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -56,6 +51,28 @@ export default async function handler(req, res) {
 
         if (!process.env.GOOGLE_API_KEY) {
             return res.status(500).json({ error: 'Server misconfiguration: GOOGLE_API_KEY missing' });
+        }
+
+        if (type === 'tts') {
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: contents }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: {
+                                voiceName: (config && config.voiceName) || 'Puck'
+                            },
+                        },
+                    },
+                },
+            });
+
+            const response = await result.response;
+            const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+            return res.status(200).json({ audioData });
         }
 
         // Initialize the model with systemInstruction

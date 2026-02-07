@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { EmergencyContact, CheckInSettings, User, VoiceSettings } from '../types';
-import { GoogleGenAI, Modality } from "@google/genai";
-import { decode, decodeAudioData } from '../services/geminiService';
+import { decode, decodeAudioData, generateSpeech } from '../services/geminiService';
 
 interface SettingsProps {
   contacts: EmergencyContact[];
@@ -20,14 +19,14 @@ interface SettingsProps {
   onToggleBiometric: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ 
-  contacts, 
-  onUpdateContacts, 
-  checkIn, 
-  onUpdateCheckIn, 
+const Settings: React.FC<SettingsProps> = ({
+  contacts,
+  onUpdateContacts,
+  checkIn,
+  onUpdateCheckIn,
   voiceSettings,
   onUpdateVoiceSettings,
-  user, 
+  user,
   onUpdateUser,
   onLogout,
   theme,
@@ -65,23 +64,10 @@ const Settings: React.FC<SettingsProps> = ({
     if (samplingVoice) return;
     setSamplingVoice(voice);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Hello, I'm HerVoice AI. This is how I'll sound when I'm looking out for you.`;
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
-        contents: [{ parts: [{ text: prompt }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: voice },
-            },
-          },
-        },
-      });
 
-      const audioData = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      const audioData = await import('../services/geminiService').then(m => m.generateSpeech(prompt, voice));
+
       if (audioData) {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
         const buffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
@@ -134,7 +120,7 @@ const Settings: React.FC<SettingsProps> = ({
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Settings</h2>
           <p className="text-slate-500 text-sm">Personalize your safety vault.</p>
         </div>
-        <button 
+        <button
           onClick={onLogout}
           className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors"
         >
@@ -153,7 +139,7 @@ const Settings: React.FC<SettingsProps> = ({
               <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg truncate">{user?.name}</h3>
               <p className="text-xs text-slate-500 truncate">{user?.email}</p>
             </div>
-            <button 
+            <button
               onClick={() => setIsEditingProfile(true)}
               className="px-4 py-2 bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
             >
@@ -162,20 +148,18 @@ const Settings: React.FC<SettingsProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2">
-            <button 
+            <button
               onClick={() => toggleLink('google')}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${
-                user?.isGoogleLinked ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800 text-green-600 dark:text-green-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
-              }`}
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${user?.isGoogleLinked ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800 text-green-600 dark:text-green-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+                }`}
             >
               <i className="fa-brands fa-google text-xs"></i>
               {user?.isGoogleLinked ? 'Google Linked' : 'Link Google'}
             </button>
-            <button 
+            <button
               onClick={() => toggleLink('contacts')}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${
-                user?.isContactsSynced ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
-              }`}
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${user?.isContactsSynced ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+                }`}
             >
               <i className="fa-solid fa-address-book text-xs"></i>
               {user?.isContactsSynced ? 'Synced' : 'Sync Contacts'}
@@ -192,7 +176,7 @@ const Settings: React.FC<SettingsProps> = ({
             </h3>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Quick Unlock</span>
-              <div 
+              <div
                 onClick={onToggleBiometric}
                 className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${biometricEnabled ? 'bg-brand-rose' : 'bg-slate-200 dark:bg-slate-700'}`}
               >
@@ -214,7 +198,7 @@ const Settings: React.FC<SettingsProps> = ({
             </h3>
             <div className="flex items-center gap-3">
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Dark Mode</span>
-              <div 
+              <div
                 onClick={onToggleTheme}
                 className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${theme === 'dark' ? 'bg-purple-600' : 'bg-slate-200 dark:bg-slate-700'}`}
               >
@@ -232,7 +216,7 @@ const Settings: React.FC<SettingsProps> = ({
               Voice & Audio
             </h3>
           </div>
-          
+
           <div className="p-5 space-y-6">
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Companion Voice</label>
@@ -241,23 +225,21 @@ const Settings: React.FC<SettingsProps> = ({
                   <div key={voice} className="flex items-center gap-1.5">
                     <button
                       onClick={() => onUpdateVoiceSettings({ voiceName: voice })}
-                      className={`flex-1 px-4 py-2 text-xs font-bold rounded-xl border transition-all text-left flex justify-between items-center ${
-                        voiceSettings.voiceName === voice 
-                          ? 'bg-brand-rose text-white border-brand-rose shadow-lg shadow-brand-rose/10' 
-                          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
-                      }`}
+                      className={`flex-1 px-4 py-2 text-xs font-bold rounded-xl border transition-all text-left flex justify-between items-center ${voiceSettings.voiceName === voice
+                        ? 'bg-brand-rose text-white border-brand-rose shadow-lg shadow-brand-rose/10'
+                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+                        }`}
                     >
                       <span>{voice}</span>
                       {voiceSettings.voiceName === voice && <i className="fa-solid fa-check text-[10px]"></i>}
                     </button>
-                    <button 
+                    <button
                       onClick={(e) => { e.stopPropagation(); playVoiceSample(voice); }}
                       disabled={samplingVoice !== null}
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                        samplingVoice === voice 
-                          ? 'bg-brand-rose text-white animate-pulse' 
-                          : 'bg-brand-beige dark:bg-slate-700 text-brand-rose'
-                      }`}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${samplingVoice === voice
+                        ? 'bg-brand-rose text-white animate-pulse'
+                        : 'bg-brand-beige dark:bg-slate-700 text-brand-rose'
+                        }`}
                       title={`Listen to ${voice}`}
                     >
                       {samplingVoice === voice ? (
@@ -276,7 +258,7 @@ const Settings: React.FC<SettingsProps> = ({
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Speaking Rate</label>
                 <span className="text-[10px] font-bold text-brand-rose bg-brand-rose/5 px-2 py-0.5 rounded-full">{voiceSettings.speakingRate.toFixed(1)}x</span>
               </div>
-              <input 
+              <input
                 type="range"
                 min="0.5"
                 max="2.0"
@@ -304,14 +286,14 @@ const Settings: React.FC<SettingsProps> = ({
               <i className="fa-solid fa-clock text-orange-500"></i>
               Scheduled Safety
             </h3>
-            <div 
+            <div
               onClick={() => onUpdateCheckIn({ enabled: !checkIn.enabled, lastCheckInTime: new Date().toISOString() })}
               className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${checkIn.enabled ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
             >
               <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${checkIn.enabled ? 'right-0.5' : 'left-0.5 shadow-sm'}`}></div>
             </div>
           </div>
-          
+
           {checkIn.enabled && (
             <div className="p-5 space-y-4 animate-in slide-in-from-top-2">
               <div className="space-y-2">
@@ -321,13 +303,12 @@ const Settings: React.FC<SettingsProps> = ({
                     <button
                       key={mins}
                       onClick={() => onUpdateCheckIn({ intervalMinutes: mins })}
-                      className={`py-2 text-xs font-bold rounded-xl border transition-all ${
-                        checkIn.intervalMinutes === mins 
-                          ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400' 
-                          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
-                      }`}
+                      className={`py-2 text-xs font-bold rounded-xl border transition-all ${checkIn.intervalMinutes === mins
+                        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400'
+                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+                        }`}
                     >
-                      {mins >= 60 ? `${mins/60}h` : `${mins}m`}
+                      {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
                     </button>
                   ))}
                 </div>
@@ -343,8 +324,8 @@ const Settings: React.FC<SettingsProps> = ({
               <i className="fa-solid fa-users text-purple-500"></i>
               Emergency Contacts
             </h3>
-            <button 
-              onClick={() => { setIsAddingContact(true); setEditingIndex(null); setContactForm({name:'', phone:'', relationship:''}); }}
+            <button
+              onClick={() => { setIsAddingContact(true); setEditingIndex(null); setContactForm({ name: '', phone: '', relationship: '' }); }}
               className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
             >
               <i className="fa-solid fa-plus mr-1"></i> Add
@@ -367,7 +348,7 @@ const Settings: React.FC<SettingsProps> = ({
                     </span>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
+                    <button
                       onClick={() => { setEditingIndex(index); setContactForm(contacts[index]); setIsAddingContact(true); }}
                       className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700 text-slate-400 flex items-center justify-center hover:text-purple-600 dark:hover:text-purple-400"
                     >
@@ -396,30 +377,30 @@ const Settings: React.FC<SettingsProps> = ({
               <div className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Full Name</label>
-                  <input 
+                  <input
                     type="text"
                     required
                     value={profileForm.name}
-                    onChange={e => setProfileForm({...profileForm, name: e.target.value})}
+                    onChange={e => setProfileForm({ ...profileForm, name: e.target.value })}
                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email Address</label>
-                  <input 
+                  <input
                     type="email"
                     required
                     value={profileForm.email}
-                    onChange={e => setProfileForm({...profileForm, email: e.target.value})}
+                    onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Phone (Optional)</label>
-                  <input 
+                  <input
                     type="tel"
                     value={profileForm.phone}
-                    onChange={e => setProfileForm({...profileForm, phone: e.target.value})}
+                    onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
                     placeholder="+254..."
                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
                   />
@@ -427,14 +408,14 @@ const Settings: React.FC<SettingsProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsEditingProfile(false)}
                   className="py-3 px-4 bg-slate-100 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="py-3 px-4 bg-purple-600 rounded-2xl text-white font-bold text-sm shadow-lg shadow-purple-200"
                 >
@@ -463,29 +444,29 @@ const Settings: React.FC<SettingsProps> = ({
               <div className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Name</label>
-                  <input 
+                  <input
                     type="text"
                     required
                     value={contactForm.name}
-                    onChange={e => setContactForm({...contactForm, name: e.target.value})}
+                    onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Phone</label>
-                  <input 
+                  <input
                     type="tel"
                     required
                     value={contactForm.phone}
-                    onChange={e => setContactForm({...contactForm, phone: e.target.value})}
+                    onChange={e => setContactForm({ ...contactForm, phone: e.target.value })}
                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Relationship</label>
-                  <select 
+                  <select
                     value={contactForm.relationship}
-                    onChange={e => setContactForm({...contactForm, relationship: e.target.value})}
+                    onChange={e => setContactForm({ ...contactForm, relationship: e.target.value })}
                     className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
                   >
                     <option value="Friend">Friend</option>
@@ -498,14 +479,14 @@ const Settings: React.FC<SettingsProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsAddingContact(false)}
                   className="py-3 px-4 bg-slate-100 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="py-3 px-4 bg-purple-600 rounded-2xl text-white font-bold text-sm shadow-lg shadow-purple-200"
                 >
