@@ -38,6 +38,8 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; }
+        html, body, #root { width: 100%; height: 100%; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; }
         .font-serif { font-family: 'Playfair Display', serif; }
         .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
@@ -70,25 +72,14 @@
             border-radius: 10px;
         }
 
-        /* --- DARK MODE LEGIBILITY FIXES --- */
-        /* Forces the dark charcoal text to turn white in dark mode */
-        .dark .text-brand-charcoal {
-            color: #f1f5f9 !important; 
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            main { padding-bottom: 80px; /* Space for bottom nav */ }
         }
-        /* Forces gray text to be lighter and more readable */
-        .dark .text-slate-500 {
-            color: #cbd5e1 !important; 
-        }
-        /* Forces white cards to become dark slate cards */
-        .dark .bg-white {
-            background-color: #1e293b !important; 
-            border-color: #334155 !important;
-        }
-        /* ---------------------------------- */
     </style>
-  <script type="module" crossorigin src="/Her-Voice/assets/index-Lah6IG4f.js"></script>
+  <script type="module" crossorigin src="/Her-Voice/assets/index-L9up1FIH.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white transition-colors duration-300 antialiased selection:bg-brand-rose selection:text-white">
-    <div id="root"></div>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+    <div id="root"></div>
 </body>
 </html>
