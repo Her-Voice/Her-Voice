@@ -1,7 +1,7 @@
 # HerVoice.AI 🌹  
 **AI for Women’s Safety & Emotional Wellbeing**
 
-[![Link To Access the Site](https://her-voice-psi.vercel.app/)] 
+[[Link To Access the Site](https://her-voice-psi.vercel.app/)] 
 
 
 ---
