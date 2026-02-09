@@ -1,35 +1,51 @@
-import { Request, Response } from 'express';
+import { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcrypt';
-import { User } from '../models/User'; // Import your user model here
+import { Client } from 'pg';
 
-// Signup endpoint for user registration
-export const signup = async (req: Request, res: Response) => {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ message: 'Method Not Allowed' });
+    }
+
     const { email, password, name } = req.body;
 
-    // Validate input
     if (!email || !password || !name) {
         return res.status(400).json({ message: 'Email, password, and name are required.' });
     }
 
-    // Check for existing user
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-        return res.status(400).json({ message: 'User already exists.' });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({
-        email,
-        password: hashedPassword,
-        name,
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL,
     });
 
-    await newUser.save();
+    try {
+        await client.connect();
 
-    return res.status(201).json({ message: 'User registered successfully.' });
-};
+        // Check for existing user
+        const existingUserQuery = 'SELECT * FROM users WHERE email = $1';
+        const existingUserResult = await client.query(existingUserQuery, [email]);
 
-// Export or integrate this function with your routing system accordingly.
+        if (existingUserResult.rows.length > 0) {
+            await client.end();
+            return res.status(400).json({ message: 'User already exists.' });
+        }
+
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new user
+        const insertUserQuery = `
+            INSERT INTO users (name, email, password)
+            VALUES ($1, $2, $3)
+            RETURNING id, name, email;
+        `;
+        const insertUserResult = await client.query(insertUserQuery, [name, email, hashedPassword]);
+        const newUser = insertUserResult.rows[0];
+
+        await client.end();
+        return res.status(201).json({ message: 'User registered successfully.', user: newUser });
+    } catch (error) {
+        console.error('Signup error:', error);
+        await client.end();
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
+}
