@@ -27,10 +27,11 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
     setError(null);
 
     try {
-      const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-      const body = mode === 'login'
-        ? { email: formData.email, password: formData.password }
-        : { email: formData.email, password: formData.password, name: formData.name };
+      const isLogin = mode === 'login';
+      const { email, password, name } = formData;
+
+      const endpoint = isLogin ? '/api/login' : '/api/signup';
+      const body = isLogin ? { email, password } : { email, password, name };
 
       const res = await fetch(endpoint, {
         method: 'POST',

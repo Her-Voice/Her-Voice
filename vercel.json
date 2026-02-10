@@ -26,16 +26,16 @@
             "destination": "/api/debug-jwt.ts"
         },
         {
-            "source": "/api/auth/signup",
+            "source": "/api/signup",
             "destination": "/api/signup.ts"
         },
         {
-            "source": "/api/auth/login",
-            "destination": "/api/auth/login.ts"
+            "source": "/api/login",
+            "destination": "/api/login.ts"
         },
         {
-            "source": "/api/auth/validate",
-            "destination": "/api/auth/validate.ts"
+            "source": "/api/validate",
+            "destination": "/api/validate.ts"
         },
         {
             "source": "/(.*)",

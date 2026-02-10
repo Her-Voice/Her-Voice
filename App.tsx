@@ -103,7 +103,7 @@ const App: React.FC = () => {
       const token = localStorage.getItem('hervoice_auth_token');
       if (token) {
         try {
-          const res = await fetch('/api/auth/validate', {
+          const res = await fetch('/api/validate', {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (res.ok) {
@@ -126,9 +126,6 @@ const App: React.FC = () => {
       // Fallback or clear legacy session
       const savedSession = localStorage.getItem(SESSION_KEY);
       if (savedSession) {
-        // If we have a legacy session but no valid token, we might want to clear it 
-        // to force re-login with the new system, OR allow it for offline.
-        // For now, let's clear it to ensure consistency with the new auth system.
         localStorage.removeItem(SESSION_KEY);
       }
     };
