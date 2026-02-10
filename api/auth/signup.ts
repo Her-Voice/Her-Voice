@@ -18,11 +18,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     body = body || {};
 
-    const { email, password, name } = body;
+    // DEBUG: Hardcode values to test if req.body is the issue
+    const email = `debug_signup_${Date.now()}@test.com`;
+    const password = 'hardcoded_pass';
+    const name = 'Hardcoded User';
 
-    if (!email || !password || !name) {
-        return res.status(400).json({ message: 'Email, password, and name are required.' });
-    }
+    // const { email, password, name } = body;
+
+    // if (!email || !password || !name) {
+    //    return res.status(400).json({ message: 'Email, password, and name are required.' });
+    //}
 
     let client;
 
