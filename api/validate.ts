@@ -1,6 +1,45 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
-import { verifyToken } from './auth-utils';
+import crypto from 'crypto';
+
+// --- Inline Auth Utils ---
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_change_me_in_prod';
+
+function base64UrlDecode(str: string): string {
+    str = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (str.length % 4) {
+        str += '=';
+    }
+    return Buffer.from(str, 'base64').toString();
+}
+
+function verifyToken(token: string): any {
+    try {
+        const [encodedHeader, encodedPayload, signature] = token.split('.');
+        if (!encodedHeader || !encodedPayload || !signature) return null;
+
+        const expectedSignature = crypto.createHmac('sha256', JWT_SECRET)
+            .update(`${encodedHeader}.${encodedPayload}`)
+            .digest('base64')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=+$/, '');
+
+        if (signature !== expectedSignature) return null;
+
+        const payload = JSON.parse(base64UrlDecode(encodedPayload));
+
+        // Check expiration
+        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+            return null; // Expired
+        }
+
+        return payload;
+    } catch (e) {
+        return null;
+    }
+}
+// -------------------------
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
