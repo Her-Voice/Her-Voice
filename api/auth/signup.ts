@@ -63,11 +63,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const newUser = insertUserResult.rows[0];
 
         // Generate JWT token
-        const token = jwt.sign(
-            { id: newUser.id, email: newUser.email },
-            process.env.JWT_SECRET || 'your_jwt_secret',
-            { expiresIn: '7d' }
-        );
+        // DEBUG: Disable JWT to test crash
+        // const token = jwt.sign(
+        //    { id: newUser.id, email: newUser.email },
+        //    process.env.JWT_SECRET || 'your_jwt_secret',
+        //    { expiresIn: '7d' }
+        // );
+        const token = 'dummy_token_debug';
 
         await client.end();
         return res.status(201).json({
