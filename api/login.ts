@@ -38,13 +38,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Compare password
         // DEBUG: Disable bcrypt for resource check
         // const isPasswordValid = await bcrypt.compare(password, user.password);
-        const isPasswordValid = password === user.password || (await bcrypt.compare(password, user.password).catch(() => false));
-        // Wait, if I keep bcrypt in execution path it might still crash?
-        // Let's comment it out completely and check string equality only first.
-        // const isPasswordValid = password === user.password;
 
-        // Actually, let's try Cost 1 comparison? No, compare cost relies on hash cost.
-        // So just string equality for now.
+        // Strictly check string equality to rule out bcrypt completely
         const isPasswordValid = password === user.password;
 
         if (!isPasswordValid) {
