@@ -10,6 +10,18 @@
             "destination": "/api/debug-env.ts"
         },
         {
+            "source": "/api/debug-simple",
+            "destination": "/api/debug-simple.ts"
+        },
+        {
+            "source": "/api/debug-pg",
+            "destination": "/api/debug-pg.ts"
+        },
+        {
+            "source": "/api/debug-bcrypt",
+            "destination": "/api/debug-bcrypt.ts"
+        },
+        {
             "source": "/api/auth/signup",
             "destination": "/api/auth/signup.ts"
         },
