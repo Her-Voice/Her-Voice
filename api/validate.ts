@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
-import { verifyToken } from './_lib/auth-utils';
+import { verifyToken } from './auth-utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
