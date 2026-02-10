@@ -20,6 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const client = new Client({
         connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+        ssl: { rejectUnauthorized: false }
     });
 
     try {
