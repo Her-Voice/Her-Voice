@@ -28,7 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         // PERF: Hash password before DB connection to save resources
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Lower cost factor to 8 to avoid timeout/OOM on Vercel
+        const hashedPassword = await bcrypt.hash(password, 8);
 
         client = new Client({
             connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
