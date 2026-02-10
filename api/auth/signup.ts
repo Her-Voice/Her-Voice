@@ -12,6 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const { email, password, name } = req.body || {};
 
+        if (req.query.debug === 'input') {
+            return res.status(200).json({ step: 'input', received: { email, name, hasPassword: !!password } });
+        }
+
         if (!email || !password || !name) {
             return res.status(400).json({ message: 'Email, password, and name are required.' });
         }
@@ -22,6 +26,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
 
         await client.connect();
+
+        if (req.query.debug === 'db') {
+            await client.end();
+            return res.status(200).json({ step: 'db', status: 'connected' });
+        }
 
         // Check for existing user
         const existingUserQuery = 'SELECT * FROM users WHERE email = $1';
@@ -34,6 +43,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        if (req.query.debug === 'hash') {
+            await client.end();
+            return res.status(200).json({ step: 'hash', status: 'success' });
+        }
 
         // Create new user
         const insertUserQuery = `
