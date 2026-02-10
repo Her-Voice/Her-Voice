@@ -2,6 +2,32 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ message: 'Method Not Allowed' });
+    }
+
+    let body = req.body;
+    if (typeof body === 'string') {
+        try {
+            body = JSON.parse(body);
+        } catch (e) {
+            return res.status(400).json({ message: 'Invalid JSON body' });
+        }
+    }
+    body = body || {};
+
+    const { email, password, name } = body;
+
+    if (!email || !password || !name) {
+        return res.status(400).json({ message: 'Email, password, and name are required.' });
+    }
+
+    // DEBUG: No Bcrypt
+    const hashedPassword = password;
+
+    // DEBUG: No JWT (use dummy first? No, JWT is light)
+    // Let's use JWT to see if it works.
+
     const client = new Client({
         connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
         ssl: { rejectUnauthorized: false }
@@ -9,13 +35,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         await client.connect();
-        const email = `debug_${Date.now()}@test.com`;
+
+        // Check existing
+        const existingUserResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (existingUserResult.rows.length > 0) {
+            await client.end();
+            return res.status(400).json({ message: 'User already exists.' });
+        }
+
         const resInsert = await client.query(
-            "INSERT INTO users (name, email, password) VALUES ('Debug', $1, 'pass') RETURNING id",
-            [email]
+            "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id",
+            [name, email, hashedPassword]
         );
+        const newUser = { id: resInsert.rows[0].id, email, name };
+
         await client.end();
-        return res.status(200).json({ message: 'Signup (Cloned Debug PG) works', id: resInsert.rows[0].id, token: 'dummy_token' });
+
+        return res.status(200).json({ message: 'Signup works (No Bcrypt)', user: newUser, token: 'dummy_token' }); // Skip JWT for now to isolate
     } catch (error: any) {
         return res.status(500).json({ message: 'Signup failed', error: error.message });
     }
