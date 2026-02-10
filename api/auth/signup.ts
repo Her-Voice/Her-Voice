@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    // Test DB Connect
     const client = new Client({
         connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
         ssl: { rejectUnauthorized: false }
@@ -12,15 +11,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         await client.connect();
-        const hash = await bcrypt.hash('test', 1);
+
+        const email = `test_${Date.now()}@example.com`;
+        const name = 'Test User';
+        const password = 'password123';
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const insertUserQuery = `
+            INSERT INTO users (name, email, password)
+            VALUES ($1, $2, $3)
+            RETURNING id, name, email;
+        `;
+        const insertUserResult = await client.query(insertUserQuery, [name, email, hashedPassword]);
+        const newUser = insertUserResult.rows[0];
+
+        const token = jwt.sign({ id: newUser.id }, 'secret');
+
         await client.end();
 
-        return res.status(200).json({
-            message: 'Signup DB+Hash OK',
-            checks: {
-                db: true,
-                hash: !!hash
-            }
+        return res.status(201).json({
+            message: 'Signup INSERT OK',
+            user: newUser,
+            token
         });
     } catch (error: any) {
         return res.status(500).json({ message: 'Signup failed', error: error.message });
