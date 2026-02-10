@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -41,8 +42,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const insertUserResult = await client.query(insertUserQuery, [name, email, hashedPassword]);
         const newUser = insertUserResult.rows[0];
 
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: newUser.id, email: newUser.email },
+            process.env.JWT_SECRET || 'your_jwt_secret',
+            { expiresIn: '7d' }
+        );
+
         await client.end();
-        return res.status(201).json({ message: 'User registered successfully.', user: newUser });
+        return res.status(201).json({
+            message: 'User registered successfully.',
+            token,
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                name: newUser.name
+            }
+        });
     } catch (error) {
         console.error('Signup error:', error);
         await client.end();

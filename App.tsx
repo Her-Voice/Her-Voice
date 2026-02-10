@@ -26,7 +26,7 @@ const App: React.FC = () => {
     const savedContacts = localStorage.getItem(CONTACTS_KEY);
     const savedBiometric = localStorage.getItem(BIOMETRIC_KEY) === 'true';
     const savedVoice = localStorage.getItem(VOICE_KEY);
-    
+
     return {
       view: AppView.DASHBOARD,
       isDistressed: false,
@@ -47,10 +47,10 @@ const App: React.FC = () => {
       ],
       location: null,
       locationHistory: [
-          { lat: -1.2850, lng: 36.8160, timestamp: new Date(Date.now() - 3600000).toISOString() },
-          { lat: -1.2855, lng: 36.8165, timestamp: new Date(Date.now() - 2400000).toISOString() },
-          { lat: -1.2860, lng: 36.8170, timestamp: new Date(Date.now() - 1200000).toISOString() },
-          { lat: -1.286389, lng: 36.817223, timestamp: new Date().toISOString() },
+        { lat: -1.2850, lng: 36.8160, timestamp: new Date(Date.now() - 3600000).toISOString() },
+        { lat: -1.2855, lng: 36.8165, timestamp: new Date(Date.now() - 2400000).toISOString() },
+        { lat: -1.2860, lng: 36.8170, timestamp: new Date(Date.now() - 1200000).toISOString() },
+        { lat: -1.286389, lng: 36.817223, timestamp: new Date().toISOString() },
       ],
       checkIn: {
         enabled: false,
@@ -99,16 +99,40 @@ const App: React.FC = () => {
 
   // Auto-login effect
   useEffect(() => {
-    const savedSession = localStorage.getItem(SESSION_KEY);
-    if (savedSession) {
-      try {
-        const user = JSON.parse(savedSession) as User;
-        setState(prev => ({ ...prev, isAuthenticated: true, user }));
-      } catch (e) {
-        console.error("Failed to restore session", e);
+    const initSession = async () => {
+      const token = localStorage.getItem('hervoice_auth_token');
+      if (token) {
+        try {
+          const res = await fetch('/api/auth/validate', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setState(prev => ({
+              ...prev,
+              isAuthenticated: true,
+              user: { ...data.user, isGoogleLinked: false, isContactsSynced: false }
+            }));
+            return;
+          } else {
+            // Token invalid
+            localStorage.removeItem('hervoice_auth_token');
+          }
+        } catch (e) {
+          console.error("Session validation error", e);
+        }
+      }
+
+      // Fallback or clear legacy session
+      const savedSession = localStorage.getItem(SESSION_KEY);
+      if (savedSession) {
+        // If we have a legacy session but no valid token, we might want to clear it 
+        // to force re-login with the new system, OR allow it for offline.
+        // For now, let's clear it to ensure consistency with the new auth system.
         localStorage.removeItem(SESSION_KEY);
       }
-    }
+    };
+    initSession();
   }, []);
 
   // Theme effect
@@ -124,10 +148,10 @@ const App: React.FC = () => {
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
-        setState(prev => ({ 
-            ...prev, 
-            location: pos,
-            locationHistory: [...prev.locationHistory, { lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: new Date().toISOString() }]
+        setState(prev => ({
+          ...prev,
+          location: pos,
+          locationHistory: [...prev.locationHistory, { lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: new Date().toISOString() }]
         }));
       }, (err) => console.warn("Location access denied", err));
     }
@@ -151,7 +175,7 @@ const App: React.FC = () => {
   }, [state.checkIn, showCheckInOverlay, state.isDistressed, state.isAuthenticated]);
 
   const setView = (view: AppView) => setState(prev => ({ ...prev, view }));
-  
+
   const onDistress = (status: boolean) => {
     setState(prev => ({ ...prev, isDistressed: status }));
     setShowCheckInOverlay(false);
@@ -255,10 +279,10 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (state.view) {
       case AppView.DASHBOARD:
-        return <Dashboard 
-          setView={setView} 
-          reports={state.reports} 
-          isDistressed={state.isDistressed} 
+        return <Dashboard
+          setView={setView}
+          reports={state.reports}
+          isDistressed={state.isDistressed}
           history={state.locationHistory}
           checkIn={state.checkIn}
           isOnline={state.isOnline}
@@ -270,17 +294,17 @@ const App: React.FC = () => {
       case AppView.GROUNDING:
         return <GroundingExercises onBack={() => setView(AppView.DASHBOARD)} />;
       case AppView.INCIDENT_VAULT:
-        return <IncidentVault 
-            reports={state.reports} 
-            onUpdateReport={handleUpdateReport} 
-            onDeleteReport={handleDeleteReport} 
-            onCreateReport={handleCreateReport}
-            currentLocation={state.location ? { lat: state.location.coords.latitude, lng: state.location.coords.longitude } : { lat: -1.286389, lng: 36.817223 }}
-            isOnline={state.isOnline}
+        return <IncidentVault
+          reports={state.reports}
+          onUpdateReport={handleUpdateReport}
+          onDeleteReport={handleDeleteReport}
+          onCreateReport={handleCreateReport}
+          currentLocation={state.location ? { lat: state.location.coords.latitude, lng: state.location.coords.longitude } : { lat: -1.286389, lng: 36.817223 }}
+          isOnline={state.isOnline}
         />;
       case AppView.SETTINGS:
-        return <Settings 
-          contacts={state.contacts} 
+        return <Settings
+          contacts={state.contacts}
           onUpdateContacts={handleUpdateContacts}
           checkIn={state.checkIn}
           onUpdateCheckIn={handleUpdateCheckIn}
@@ -296,36 +320,36 @@ const App: React.FC = () => {
         />;
       case AppView.MAP_HISTORY:
         return (
-            <div className="p-6 pb-24 space-y-6 animate-in fade-in duration-300 h-full flex flex-col dark:bg-slate-900">
-                <header className="flex items-center gap-4">
-                    <button onClick={() => setView(AppView.DASHBOARD)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your Path</h2>
-                        <p className="text-xs text-slate-500">Location history for the last 24h</p>
-                    </div>
-                </header>
-                <div className="flex-1 min-h-[400px]">
-                    <MapLayer 
-                        center={state.locationHistory[state.locationHistory.length - 1] || { lat: -1.286389, lng: 36.817223 }}
-                        path={state.locationHistory}
-                        points={state.locationHistory.map((p, i) => ({ 
-                            ...p, 
-                            type: i === state.locationHistory.length - 1 ? 'current' : 'history',
-                            label: new Date(p.timestamp).toLocaleTimeString()
-                        }))}
-                        zoom={16}
-                        className="h-full w-full rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-inner"
-                    />
-                </div>
+          <div className="p-6 pb-24 space-y-6 animate-in fade-in duration-300 h-full flex flex-col dark:bg-slate-900">
+            <header className="flex items-center gap-4">
+              <button onClick={() => setView(AppView.DASHBOARD)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your Path</h2>
+                <p className="text-xs text-slate-500">Location history for the last 24h</p>
+              </div>
+            </header>
+            <div className="flex-1 min-h-[400px]">
+              <MapLayer
+                center={state.locationHistory[state.locationHistory.length - 1] || { lat: -1.286389, lng: 36.817223 }}
+                path={state.locationHistory}
+                points={state.locationHistory.map((p, i) => ({
+                  ...p,
+                  type: i === state.locationHistory.length - 1 ? 'current' : 'history',
+                  label: new Date(p.timestamp).toLocaleTimeString()
+                }))}
+                zoom={16}
+                className="h-full w-full rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-inner"
+              />
             </div>
+          </div>
         );
       case AppView.FAKE_CALL:
         return <FakeCall onBack={() => setView(AppView.DASHBOARD)} isOnline={state.isOnline} voiceSettings={state.voiceSettings} />;
       default:
-        return <Dashboard 
-          setView={setView} 
-          reports={state.reports} 
-          isDistressed={state.isDistressed} 
+        return <Dashboard
+          setView={setView}
+          reports={state.reports}
+          isDistressed={state.isDistressed}
           history={state.locationHistory}
           checkIn={state.checkIn}
           isOnline={state.isOnline}
@@ -348,9 +372,8 @@ const App: React.FC = () => {
             <button
               key={item.view}
               onClick={() => setView(item.view)}
-              className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
-                state.view === item.view ? 'bg-brand-rose/10 text-brand-rose' : 'text-brand-charcoal/70 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
+              className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${state.view === item.view ? 'bg-brand-rose/10 text-brand-rose' : 'text-brand-charcoal/70 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
             >
               <i className={`fa-solid ${item.icon} text-lg`}></i>
               <span className="text-[8px] font-bold uppercase tracking-tight text-center">{item.label}</span>
@@ -362,44 +385,44 @@ const App: React.FC = () => {
         <div className="flex flex-col flex-1 overflow-hidden max-w-full lg:max-w-7xl lg:mx-auto lg:w-full">
           {/* Persistent Global Header */}
           <header className="sticky top-0 z-[70] glass dark:bg-slate-900/90 border-b border-brand-beige/20 dark:border-slate-800 px-4 py-3 flex justify-between items-center transition-colors duration-300 lg:px-8">
-          <div 
-            className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
-            onClick={() => setView(AppView.DASHBOARD)}
-          >
-            <div className="w-10 h-10 rounded-full bg-brand-rose flex items-center justify-center text-white shadow-sm overflow-hidden p-1.5">
-                <img 
-                  src="/figure.svg" 
-                  alt="HerVoice logo" 
-                  className="w-10 h-10 md:w-14 md:h-14" 
-                  style={{ filter: 'brightness(2.5) contrast(2) drop-shadow(0 0 8px white)' }} 
-                  width={48} 
-                  height={48} 
-                />
-            </div>
-            <span className="font-serif text-brand-rose tracking-tight text-xl pt-0.5 ml-1">HerVoice</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {!state.isOnline && (
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg animate-pulse">
-                <i className="fa-solid fa-cloud-slash text-[10px] text-slate-400"></i>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Offline</span>
-              </div>
-            )}
-            <button 
-              onClick={() => onDistress(true)}
-              className="bg-brand-rose text-white px-5 py-2 rounded-full text-[10px] font-black shadow-lg shadow-brand-rose/20 flex items-center gap-2 pulse active:scale-95 transition-transform uppercase tracking-widest"
+            <div
+              className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
+              onClick={() => setView(AppView.DASHBOARD)}
             >
-              <i className="fa-solid fa-triangle-exclamation"></i>
-              SOS
-            </button>
-          </div>
-        </header>
+              <div className="w-10 h-10 rounded-full bg-brand-rose flex items-center justify-center text-white shadow-sm overflow-hidden p-1.5">
+                <img
+                  src="/figure.svg"
+                  alt="HerVoice logo"
+                  className="w-10 h-10 md:w-14 md:h-14"
+                  style={{ filter: 'brightness(2.5) contrast(2) drop-shadow(0 0 8px white)' }}
+                  width={48}
+                  height={48}
+                />
+              </div>
+              <span className="font-serif text-brand-rose tracking-tight text-xl pt-0.5 ml-1">HerVoice</span>
+            </div>
 
-        {/* Dynamic View Content */}
-        <div className="flex-1 overflow-y-auto bg-brand-beige/50 dark:bg-slate-900">
-          {renderView()}
-        </div>
+            <div className="flex items-center gap-3">
+              {!state.isOnline && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg animate-pulse">
+                  <i className="fa-solid fa-cloud-slash text-[10px] text-slate-400"></i>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Offline</span>
+                </div>
+              )}
+              <button
+                onClick={() => onDistress(true)}
+                className="bg-brand-rose text-white px-5 py-2 rounded-full text-[10px] font-black shadow-lg shadow-brand-rose/20 flex items-center gap-2 pulse active:scale-95 transition-transform uppercase tracking-widest"
+              >
+                <i className="fa-solid fa-triangle-exclamation"></i>
+                SOS
+              </button>
+            </div>
+          </header>
+
+          {/* Dynamic View Content */}
+          <div className="flex-1 overflow-y-auto bg-brand-beige/50 dark:bg-slate-900">
+            {renderView()}
+          </div>
         </div>
       </main>
 
@@ -415,9 +438,8 @@ const App: React.FC = () => {
           <button
             key={item.view}
             onClick={() => setView(item.view)}
-            className={`flex-1 flex flex-col items-center gap-1.5 transition-all active:scale-90 ${
-              state.view === item.view ? 'text-brand-rose' : 'text-brand-charcoal/70'
-            }`}
+            className={`flex-1 flex flex-col items-center gap-1.5 transition-all active:scale-90 ${state.view === item.view ? 'text-brand-rose' : 'text-brand-charcoal/70'
+              }`}
           >
             <div className="relative">
               <i className={`fa-solid ${item.icon} ${state.view === item.view ? 'text-xl' : 'text-lg'}`}></i>
@@ -434,7 +456,7 @@ const App: React.FC = () => {
           </button>
         ))}
       </nav>
-      
+
       {state.isDistressed && (
         <div className="fixed top-0 left-0 right-0 bg-brand-rose text-white text-[10px] font-black py-1 px-4 text-center z-[80] tracking-[0.2em] animate-pulse uppercase">
           Emergency Mode Active • Help Requested
@@ -442,7 +464,7 @@ const App: React.FC = () => {
       )}
 
       {showCheckInOverlay && (
-        <CheckInReminder 
+        <CheckInReminder
           onConfirmSafe={confirmSafe}
           onStartCompanion={startCompanionFromCheckIn}
           onPanic={() => onDistress(true)}
