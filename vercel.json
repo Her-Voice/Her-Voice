@@ -22,6 +22,10 @@
             "destination": "/api/debug-bcrypt.ts"
         },
         {
+            "source": "/api/debug-jwt",
+            "destination": "/api/debug-jwt.ts"
+        },
+        {
             "source": "/api/auth/signup",
             "destination": "/api/auth/signup.ts"
         },

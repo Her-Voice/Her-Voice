@@ -4,22 +4,23 @@ import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ message: 'Method Not Allowed' });
-    }
-
-    const { email, password, name } = req.body;
-
-    if (!email || !password || !name) {
-        return res.status(400).json({ message: 'Email, password, and name are required.' });
-    }
-
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-        ssl: { rejectUnauthorized: false }
-    });
-
+    let client;
     try {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ message: 'Method Not Allowed' });
+        }
+
+        const { email, password, name } = req.body || {};
+
+        if (!email || !password || !name) {
+            return res.status(400).json({ message: 'Email, password, and name are required.' });
+        }
+
+        client = new Client({
+            connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+            ssl: { rejectUnauthorized: false }
+        });
+
         await client.connect();
 
         // Check for existing user
@@ -60,9 +61,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 name: newUser.name
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Signup error:', error);
-        await client.end();
-        return res.status(500).json({ message: 'Internal Server Error' });
+        if (client) {
+            await client.end().catch(() => { });
+        }
+        return res.status(500).json({ message: 'Internal Server Error', error: error.message, stack: error.stack });
     }
 }
