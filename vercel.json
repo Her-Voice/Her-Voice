@@ -6,6 +6,10 @@
             "destination": "/api/gemini.js"
         },
         {
+            "source": "/api/debug-env",
+            "destination": "/api/debug-env.ts"
+        },
+        {
             "source": "/api/auth/signup",
             "destination": "/api/auth/signup.ts"
         },
