@@ -9,9 +9,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         await client.connect();
-        const result = await client.query('SELECT * FROM users LIMIT 1');
+        const email = `debug_${Date.now()}@test.com`;
+        const resInsert = await client.query(
+            "INSERT INTO users (name, email, password) VALUES ('Debug', $1, 'pass') RETURNING id",
+            [email]
+        );
         await client.end();
-        return res.status(200).json({ message: 'PG users query works', rows: result.rows });
+        return res.status(200).json({ message: 'PG INSERT works', id: resInsert.rows[0].id });
     } catch (error: any) {
         return res.status(500).json({ message: 'PG failed', error: error.message });
     }
