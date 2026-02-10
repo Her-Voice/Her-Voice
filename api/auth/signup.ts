@@ -24,11 +24,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ message: 'Email, password, and name are required.' });
     }
 
+    let client;
+
     try {
         // PERF: Hash password before DB connection to save resources
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const client = new Client({
+        client = new Client({
             connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
             ssl: { rejectUnauthorized: false }
         });
