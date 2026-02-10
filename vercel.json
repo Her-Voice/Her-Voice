@@ -27,7 +27,7 @@
         },
         {
             "source": "/api/auth/signup",
-            "destination": "/api/auth/signup.ts"
+            "destination": "/api/signup.ts"
         },
         {
             "source": "/api/auth/login",
