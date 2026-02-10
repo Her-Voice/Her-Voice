@@ -32,10 +32,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ message: 'Invalid email or password.' });
         }
 
+        // Close DB connection EARLY to free resources before CPU intensive work
+        await client.end();
+
         // Compare password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            await client.end();
             return res.status(401).json({ message: 'Invalid email or password.' });
         }
 
@@ -46,7 +48,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             { expiresIn: '7d' }
         );
 
-        await client.end();
         return res.status(200).json({
             message: 'Login successful.',
             token,
