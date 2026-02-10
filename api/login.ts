@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 // import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -47,14 +47,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET || 'your_jwt_secret',
-            { expiresIn: '7d' }
-        );
+        // DEBUG: Disable JWT
+        // const token = jwt.sign(
+        //     { id: user.id, email: user.email },
+        //     process.env.JWT_SECRET || 'your_jwt_secret',
+        //     { expiresIn: '7d' }
+        // );
+        const token = 'dummy_token_no_jwt';
 
         return res.status(200).json({
-            message: 'Login successful.',
+            message: 'Login successful (No JWT, No Bcrypt).',
             token,
             user: {
                 id: user.id,
