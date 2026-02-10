@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
-import { hashPassword, signToken } from '../../lib/auth-utils';
+import { hashPassword, signToken } from '../lib/auth-utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {

@@ -1,7 +1,6 @@
-```typescript
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
-import { verifyPassword, signToken } from '../../lib/auth-utils';
+import { verifyPassword, signToken } from '../lib/auth-utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -56,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error) {
         console.error('Login error:', error);
-        await client.end().catch(() => {});
+        await client.end().catch(() => { });
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 }
