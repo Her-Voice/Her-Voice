@@ -28,8 +28,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         // PERF: Haash password before DB connection to save resources
-        // DEBUG: Set cost to 1 to verify if it's purely CPU/Memory limit
-        const hashedPassword = await bcrypt.hash(password, 1);
+        // DEBUG: Disable bcrypt completely to test interaction with PG
+        // const hashedPassword = await bcrypt.hash(password, 1);
+        const hashedPassword = 'dummy_hash_for_debug';
 
         client = new Client({
             connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
