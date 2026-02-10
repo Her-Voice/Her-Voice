@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { Client } from 'pg';
+import { hashPassword, signToken } from '../../lib/auth-utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -22,11 +23,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ message: 'Email, password, and name are required.' });
     }
 
-    // DEBUG: No Bcrypt
-    const hashedPassword = password;
-
-    // DEBUG: No JWT (use dummy first? No, JWT is light)
-    // Let's use JWT to see if it works.
+    // Hash password (Lightweight PBKDF2) - BEFORE DB connection
+    const hashedPassword = await hashPassword(password);
 
     const client = new Client({
         connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
@@ -51,7 +49,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         await client.end();
 
-        return res.status(200).json({ message: 'Signup works (No Bcrypt)', user: newUser, token: 'dummy_token' }); // Skip JWT for now to isolate
+        // Generate Token
+        const token = signToken({ id: newUser.id, email: newUser.email });
+
+        return res.status(200).json({ message: 'User registered successfully.', user: newUser, token });
     } catch (error: any) {
         return res.status(500).json({ message: 'Signup failed', error: error.message });
     }

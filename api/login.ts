@@ -1,7 +1,7 @@
+```typescript
 import { VercelRequest, VercelResponse } from '@vercel/node';
-// import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
+import { verifyPassword, signToken } from '../../lib/auth-utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
@@ -35,27 +35,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Close DB connection EARLY to free resources before CPU intensive work
         await client.end();
 
-        // Compare password
-        // DEBUG: Disable bcrypt for resource check
-        // const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        // Strictly check string equality to rule out bcrypt completely
-        const isPasswordValid = password === user.password;
+        // Compare password (Lightweight PBKDF2)
+        const isPasswordValid = await verifyPassword(password, user.password);
 
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Invalid email or password.' });
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET || 'your_jwt_secret',
-            { expiresIn: '7d' }
-        );
-        // const token = 'dummy_token_no_jwt';
+        // Generate JWT token (Lightweight HMAC)
+        const token = signToken({ id: user.id, email: user.email });
 
         return res.status(200).json({
-            message: 'Login successful (JWT enabled, No Bcrypt).',
+            message: 'Login successful.',
             token,
             user: {
                 id: user.id,
@@ -65,7 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error) {
         console.error('Login error:', error);
-        await client.end();
+        await client.end().catch(() => {});
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 }
+```

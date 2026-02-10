@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import jwt from 'jsonwebtoken';
 import { Client } from 'pg';
+import { verifyToken } from '../../lib/auth-utils';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -18,13 +18,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(401).json({ message: 'No token provided.' });
     }
 
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-        ssl: { rejectUnauthorized: false }
-    });
-
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as any;
+        const decoded = verifyToken(token);
+        if (!decoded) {
+            return res.status(401).json({ message: 'Invalid token.' });
+        }
+
+        const client = new Client({
+            connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+            ssl: { rejectUnauthorized: false }
+        });
 
         await client.connect();
         const query = 'SELECT id, name, email FROM users WHERE id = $1';
@@ -46,7 +49,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error) {
         console.error('Validation error:', error);
-        await client.end().catch(() => { });
-        return res.status(401).json({ message: 'Invalid token.' });
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
 }
