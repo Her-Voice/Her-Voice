@@ -34,6 +34,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // DEBUG: Return here to test pre-insert logic
+        if (req.query.debug === 'pre-insert') {
+            await client.end();
+            return res.status(200).json({ step: 'pre-insert', status: 'success' });
+        }
+
         // Create new user
         const insertUserQuery = `
             INSERT INTO users (name, email, password)
