@@ -6,6 +6,18 @@
             "destination": "/api/gemini.js"
         },
         {
+            "source": "/api/auth/signup",
+            "destination": "/api/auth/signup.ts"
+        },
+        {
+            "source": "/api/auth/login",
+            "destination": "/api/auth/login.ts"
+        },
+        {
+            "source": "/api/auth/validate",
+            "destination": "/api/auth/validate.ts"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
