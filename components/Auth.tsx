@@ -79,33 +79,13 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
       {/* Brand Logo Integration */}
       <div className="flex flex-col items-center mb-10 relative">
         <div className="flex items-center gap-6 mb-2">
-            {/* Minimalist Single-Line Bun Silhouette matching the provided image exactly */}
-            <svg width="120" height="140" viewBox="0 0 100 120" className="opacity-90">
-                <path 
-                    d="M48 32 C38 30, 36 22, 42 16 C48 10, 56 12, 60 20 C64 28, 55 35, 48 38 C42 42, 40 55, 45 68 C50 78, 42 90, 38 95" 
-                    fill="none" 
-                    stroke="#333333" 
-                    strokeWidth="1.8"
-                />
-                <path 
-                    d="M42 16 C38 16, 36 19, 38 23 C40 27, 46 25, 42 16 Z" 
-                    fill="none" 
-                    stroke="#333333" 
-                    strokeWidth="1.2"
-                />
-                <path 
-                    d="M50 48 C62 50, 72 60, 72 75" 
-                    fill="none" 
-                    stroke="#333333" 
-                    strokeWidth="1.8"
-                />
-                <path 
-                    d="M45 18 C48 15, 52 16, 54 20" 
-                    fill="none" 
-                    stroke="#333333" 
-                    strokeWidth="1"
-                />
-            </svg>
+          <img
+  src="/her_voice.svg"
+  width="160"
+  height="180"
+  alt="HerVoice logo"
+  className="w-40 h-44 opacity-200 filter drop-shadow-[0_8px_12px_rgba(0,0,0,0.25)] contrast-205"
+/>
             
             <div className="flex flex-col">
                 <h1 className="text-7xl font-serif text-brand-rose leading-tight tracking-tighter uppercase">Her</h1>
