@@ -14,7 +14,7 @@ import FakeCall from './components/FakeCall';
 import Auth from './components/Auth';
 
 const SESSION_KEY = 'hervoice_user_session';
-const THEME_KEY = 'hervoice_theme_pref';
+
 const REPORTS_KEY = 'hervoice_reports';
 const CONTACTS_KEY = 'hervoice_contacts';
 const BIOMETRIC_KEY = 'hervoice_biometric_enabled';
@@ -59,7 +59,7 @@ const App: React.FC = () => {
       },
       isAuthenticated: false,
       user: null,
-      theme: (localStorage.getItem(THEME_KEY) as 'light' | 'dark') || 'light',
+
       isOnline: navigator.onLine,
       biometricEnabled: savedBiometric,
       voiceSettings: savedVoice ? JSON.parse(savedVoice) : { voiceName: 'Kore', speakingRate: 1.0 }
@@ -132,15 +132,7 @@ const App: React.FC = () => {
     initSession();
   }, []);
 
-  // Theme effect
-  useEffect(() => {
-    if (state.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem(THEME_KEY, state.theme);
-  }, [state.theme]);
+
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -244,9 +236,7 @@ const App: React.FC = () => {
     localStorage.removeItem(SESSION_KEY);
   };
 
-  const toggleTheme = () => {
-    setState(prev => ({ ...prev, theme: prev.theme === 'light' ? 'dark' : 'light' }));
-  };
+
 
   const confirmSafe = () => {
     setShowCheckInOverlay(false);
@@ -310,18 +300,17 @@ const App: React.FC = () => {
           user={state.user}
           onUpdateUser={handleUpdateUser}
           onLogout={handleLogout}
-          theme={state.theme}
-          onToggleTheme={toggleTheme}
+
           biometricEnabled={state.biometricEnabled}
           onToggleBiometric={toggleBiometric}
         />;
       case AppView.MAP_HISTORY:
         return (
-          <div className="p-6 pb-24 space-y-6 animate-in fade-in duration-300 h-full flex flex-col dark:bg-slate-900">
+          <div className="p-6 pb-24 space-y-6 animate-in fade-in duration-300 h-full flex flex-col">
             <header className="flex items-center gap-4">
-              <button onClick={() => setView(AppView.DASHBOARD)} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
+              <button onClick={() => setView(AppView.DASHBOARD)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i className="fa-solid fa-arrow-left"></i></button>
               <div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Your Path</h2>
+                <h2 className="text-xl font-bold text-slate-800">Your Path</h2>
                 <p className="text-xs text-slate-500">Location history for the last 24h</p>
               </div>
             </header>
@@ -335,7 +324,7 @@ const App: React.FC = () => {
                   label: new Date(p.timestamp).toLocaleTimeString()
                 }))}
                 zoom={16}
-                className="h-full w-full rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-inner"
+                className="h-full w-full rounded-3xl border-2 border-slate-100 shadow-inner"
               />
             </div>
           </div>
@@ -355,10 +344,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen ${state.theme === 'dark' ? 'bg-slate-950' : 'bg-brand-beige'} transition-colors duration-300`}>
+    <div className="min-h-screen bg-brand-beige transition-colors duration-300">
       <main className="h-screen flex flex-col lg:flex-row overflow-hidden transition-colors duration-300">
         {/* Sidebar Navigation - Desktop Only */}
-        <nav className="hidden lg:flex flex-col w-24 bg-white dark:bg-slate-900 border-r border-brand-rose/10 flex-shrink-0 py-6 px-2 gap-4 sticky left-0 top-0 h-screen overflow-y-auto">
+        <nav className="hidden lg:flex flex-col w-24 bg-white border-r border-brand-rose/10 flex-shrink-0 py-6 px-2 gap-4 sticky left-0 top-0 h-screen overflow-y-auto">
           {[
             { view: AppView.DASHBOARD, icon: 'fa-house', label: 'Home' },
             { view: AppView.LIVE_COMPANION, icon: 'fa-microphone', label: 'Safe' },
@@ -369,7 +358,7 @@ const App: React.FC = () => {
             <button
               key={item.view}
               onClick={() => setView(item.view)}
-              className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${state.view === item.view ? 'bg-brand-rose/10 text-brand-rose' : 'text-brand-charcoal/70 hover:bg-slate-100 dark:hover:bg-slate-800'
+              className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${state.view === item.view ? 'bg-brand-rose/10 text-brand-rose' : 'text-brand-charcoal/70 hover:bg-slate-100'
                 }`}
             >
               <i className={`fa-solid ${item.icon} text-lg`}></i>
@@ -381,7 +370,7 @@ const App: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex flex-col flex-1 overflow-hidden max-w-full lg:max-w-7xl lg:mx-auto lg:w-full">
           {/* Persistent Global Header */}
-          <header className="sticky top-0 z-[70] glass dark:bg-slate-900/90 border-b border-brand-beige/20 dark:border-slate-800 px-4 py-3 flex justify-between items-center transition-colors duration-300 lg:px-8">
+          <header className="sticky top-0 z-[70] glass border-b border-brand-beige/20 px-4 py-3 flex justify-between items-center transition-colors duration-300 lg:px-8">
             <div
               className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
               onClick={() => setView(AppView.DASHBOARD)}
@@ -417,7 +406,7 @@ const App: React.FC = () => {
           </header>
 
           {/* Dynamic View Content */}
-          <div className="flex-1 overflow-y-auto bg-brand-beige/50 dark:bg-slate-900">
+          <div className="flex-1 overflow-y-auto bg-brand-beige/50">
             {renderView()}
           </div>
         </div>

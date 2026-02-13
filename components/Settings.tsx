@@ -13,8 +13,7 @@ interface SettingsProps {
   user: User | null;
   onUpdateUser: (user: User) => void;
   onLogout: () => void;
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
+
   biometricEnabled: boolean;
   onToggleBiometric: () => void;
 }
@@ -29,8 +28,7 @@ const Settings: React.FC<SettingsProps> = ({
   user,
   onUpdateUser,
   onLogout,
-  theme,
-  onToggleTheme,
+
   biometricEnabled,
   onToggleBiometric
 }) => {
@@ -114,15 +112,15 @@ const Settings: React.FC<SettingsProps> = ({
   const availableVoices: VoiceSettings['voiceName'][] = ['Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr'];
 
   return (
-    <div className="p-6 lg:p-12 pb-24 lg:pb-12 space-y-6 animate-in fade-in duration-300 dark:bg-slate-900 max-w-6xl mx-auto w-full">
+    <div className="p-6 lg:p-12 pb-24 lg:pb-12 space-y-6 animate-in fade-in duration-300 max-w-6xl mx-auto w-full">
       <header className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Settings</h2>
+          <h2 className="text-2xl font-bold text-slate-800">Settings</h2>
           <p className="text-slate-500 text-sm">Personalize your safety vault.</p>
         </div>
         <button
           onClick={onLogout}
-          className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors"
+          className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-colors"
         >
           <i className="fa-solid fa-right-from-bracket"></i>
         </button>
@@ -130,18 +128,18 @@ const Settings: React.FC<SettingsProps> = ({
 
       <div className="space-y-6">
         {/* Profile Card */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden p-5 space-y-4 transition-colors">
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden p-5 space-y-4 transition-colors">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/50 dark:to-indigo-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400 text-2xl font-bold border-2 border-white dark:border-slate-700 shadow-sm shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center text-purple-600 text-2xl font-bold border-2 border-white shadow-sm shrink-0">
               {user?.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg truncate">{user?.name}</h3>
+              <h3 className="font-bold text-slate-800 text-lg truncate">{user?.name}</h3>
               <p className="text-xs text-slate-500 truncate">{user?.email}</p>
             </div>
             <button
               onClick={() => setIsEditingProfile(true)}
-              className="px-4 py-2 bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
+              className="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-100 transition-colors"
             >
               Edit
             </button>
@@ -150,7 +148,7 @@ const Settings: React.FC<SettingsProps> = ({
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               onClick={() => toggleLink('google')}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${user?.isGoogleLinked ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800 text-green-600 dark:text-green-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${user?.isGoogleLinked ? 'bg-green-50 border-green-100 text-green-600' : 'bg-white border-slate-100 text-slate-500'
                 }`}
             >
               <i className="fa-brands fa-google text-xs"></i>
@@ -158,7 +156,7 @@ const Settings: React.FC<SettingsProps> = ({
             </button>
             <button
               onClick={() => toggleLink('contacts')}
-              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${user?.isContactsSynced ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+              className={`flex items-center justify-center gap-2 py-3 rounded-2xl border text-xs font-bold transition-all ${user?.isContactsSynced ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-white border-slate-100 text-slate-500'
                 }`}
             >
               <i className="fa-solid fa-address-book text-xs"></i>
@@ -168,17 +166,17 @@ const Settings: React.FC<SettingsProps> = ({
         </section>
 
         {/* Security / Biometrics */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-colors">
           <div className="p-5 flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
               <i className="fa-solid fa-fingerprint text-brand-rose"></i>
               Biometric Access
             </h3>
             <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Quick Unlock</span>
+              <span className="text-xs font-medium text-slate-500">Quick Unlock</span>
               <div
                 onClick={onToggleBiometric}
-                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${biometricEnabled ? 'bg-brand-rose' : 'bg-slate-200 dark:bg-slate-700'}`}
+                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${biometricEnabled ? 'bg-brand-rose' : 'bg-slate-200'}`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${biometricEnabled ? 'right-0.5' : 'left-0.5 shadow-sm'}`}></div>
               </div>
@@ -189,29 +187,12 @@ const Settings: React.FC<SettingsProps> = ({
           </p>
         </section>
 
-        {/* Appearance */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
-          <div className="p-5 flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <i className="fa-solid fa-palette text-purple-500"></i>
-              Appearance
-            </h3>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Dark Mode</span>
-              <div
-                onClick={onToggleTheme}
-                className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${theme === 'dark' ? 'bg-purple-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-              >
-                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${theme === 'dark' ? 'right-0.5' : 'left-0.5 shadow-sm'}`}></div>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Voice & Audio Settings */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
-          <div className="p-5 border-b border-slate-50 dark:border-slate-700">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-colors">
+          <div className="p-5 border-b border-slate-50">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
               <i className="fa-solid fa-volume-high text-brand-rose"></i>
               Voice & Audio
             </h3>
@@ -227,7 +208,7 @@ const Settings: React.FC<SettingsProps> = ({
                       onClick={() => onUpdateVoiceSettings({ voiceName: voice })}
                       className={`flex-1 px-4 py-2 text-xs font-bold rounded-xl border transition-all text-left flex justify-between items-center ${voiceSettings.voiceName === voice
                         ? 'bg-brand-rose text-white border-brand-rose shadow-lg shadow-brand-rose/10'
-                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+                        : 'bg-white border-slate-100 text-slate-500'
                         }`}
                     >
                       <span>{voice}</span>
@@ -238,7 +219,7 @@ const Settings: React.FC<SettingsProps> = ({
                       disabled={samplingVoice !== null}
                       className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${samplingVoice === voice
                         ? 'bg-brand-rose text-white animate-pulse'
-                        : 'bg-brand-beige dark:bg-slate-700 text-brand-rose'
+                        : 'bg-brand-beige text-brand-rose'
                         }`}
                       title={`Listen to ${voice}`}
                     >
@@ -265,7 +246,7 @@ const Settings: React.FC<SettingsProps> = ({
                 step="0.1"
                 value={voiceSettings.speakingRate}
                 onChange={(e) => onUpdateVoiceSettings({ speakingRate: parseFloat(e.target.value) })}
-                className="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full appearance-none accent-brand-rose cursor-pointer"
+                className="w-full h-1.5 bg-slate-100 rounded-full appearance-none accent-brand-rose cursor-pointer"
               />
               <div className="flex justify-between text-[8px] font-bold text-slate-400 uppercase tracking-tighter px-1">
                 <span>Slow</span>
@@ -280,15 +261,15 @@ const Settings: React.FC<SettingsProps> = ({
         </section>
 
         {/* Scheduled Safety */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
-          <div className="p-5 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-colors">
+          <div className="p-5 border-b border-slate-50 flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
               <i className="fa-solid fa-clock text-orange-500"></i>
               Scheduled Safety
             </h3>
             <div
               onClick={() => onUpdateCheckIn({ enabled: !checkIn.enabled, lastCheckInTime: new Date().toISOString() })}
-              className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${checkIn.enabled ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+              className={`w-12 h-6 rounded-full relative cursor-pointer transition-colors ${checkIn.enabled ? 'bg-orange-500' : 'bg-slate-200'}`}
             >
               <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${checkIn.enabled ? 'right-0.5' : 'left-0.5 shadow-sm'}`}></div>
             </div>
@@ -304,8 +285,8 @@ const Settings: React.FC<SettingsProps> = ({
                       key={mins}
                       onClick={() => onUpdateCheckIn({ intervalMinutes: mins })}
                       className={`py-2 text-xs font-bold rounded-xl border transition-all ${checkIn.intervalMinutes === mins
-                        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400'
-                        : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-500'
+                        ? 'bg-orange-50 border-orange-200 text-orange-600'
+                        : 'bg-white border-slate-100 text-slate-500'
                         }`}
                     >
                       {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
@@ -318,21 +299,21 @@ const Settings: React.FC<SettingsProps> = ({
         </section>
 
         {/* Emergency Contacts Section */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
-          <div className="p-5 border-b border-slate-50 dark:border-slate-700 flex justify-between items-center">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+        <section className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-colors">
+          <div className="p-5 border-b border-slate-50 flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
               <i className="fa-solid fa-users text-purple-500"></i>
               Emergency Contacts
             </h3>
             <button
               onClick={() => { setIsAddingContact(true); setEditingIndex(null); setContactForm({ name: '', phone: '', relationship: '' }); }}
-              className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+              className="text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full hover:bg-purple-100 transition-colors"
             >
               <i className="fa-solid fa-plus mr-1"></i> Add
             </button>
           </div>
 
-          <div className="divide-y divide-slate-50 dark:divide-slate-700">
+          <div className="divide-y divide-slate-50">
             {contacts.length === 0 ? (
               <div className="p-10 text-center text-slate-400">
                 <p className="text-xs">No contacts added yet.</p>
@@ -341,16 +322,16 @@ const Settings: React.FC<SettingsProps> = ({
               contacts.map((contact, index) => (
                 <div key={index} className="p-4 flex justify-between items-center group">
                   <div className="space-y-0.5">
-                    <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{contact.name}</h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{contact.phone}</p>
-                    <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                    <h4 className="font-bold text-slate-800 text-sm">{contact.name}</h4>
+                    <p className="text-xs text-slate-500 font-medium">{contact.phone}</p>
+                    <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
                       {contact.relationship}
                     </span>
                   </div>
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => { setEditingIndex(index); setContactForm(contacts[index]); setIsAddingContact(true); }}
-                      className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-700 text-slate-400 flex items-center justify-center hover:text-purple-600 dark:hover:text-purple-400"
+                      className="w-8 h-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:text-purple-600"
                     >
                       <i className="fa-solid fa-pen text-xs"></i>
                     </button>
@@ -365,10 +346,10 @@ const Settings: React.FC<SettingsProps> = ({
       {/* Edit Profile Modal */}
       {isEditingProfile && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-20 duration-500">
+          <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-20 duration-500">
             <form onSubmit={handleSaveProfile} className="p-6 space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Edit Profile</h3>
+                <h3 className="text-lg font-bold text-slate-800">Edit Profile</h3>
                 <button type="button" onClick={() => setIsEditingProfile(false)} className="text-slate-400">
                   <i className="fa-solid fa-xmark"></i>
                 </button>
@@ -382,7 +363,7 @@ const Settings: React.FC<SettingsProps> = ({
                     required
                     value={profileForm.name}
                     onChange={e => setProfileForm({ ...profileForm, name: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-purple-200 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -392,7 +373,7 @@ const Settings: React.FC<SettingsProps> = ({
                     required
                     value={profileForm.email}
                     onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-purple-200 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -402,7 +383,7 @@ const Settings: React.FC<SettingsProps> = ({
                     value={profileForm.phone}
                     onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
                     placeholder="+254..."
-                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-purple-200 outline-none"
                   />
                 </div>
               </div>
@@ -411,7 +392,7 @@ const Settings: React.FC<SettingsProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingProfile(false)}
-                  className="py-3 px-4 bg-slate-100 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm"
+                  className="py-3 px-4 bg-slate-100 rounded-2xl text-slate-600 font-bold text-sm"
                 >
                   Cancel
                 </button>
@@ -430,10 +411,10 @@ const Settings: React.FC<SettingsProps> = ({
       {/* Add/Edit Contact Modal */}
       {isAddingContact && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-20 duration-500">
+          <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl animate-in slide-in-from-bottom-20 duration-500">
             <form onSubmit={handleSaveContact} className="p-6 space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                <h3 className="text-lg font-bold text-slate-800">
                   {editingIndex !== null ? 'Edit Contact' : 'Add Contact'}
                 </h3>
                 <button type="button" onClick={() => setIsAddingContact(false)} className="text-slate-400">
@@ -449,7 +430,7 @@ const Settings: React.FC<SettingsProps> = ({
                     required
                     value={contactForm.name}
                     onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-purple-200 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -459,7 +440,7 @@ const Settings: React.FC<SettingsProps> = ({
                     required
                     value={contactForm.phone}
                     onChange={e => setContactForm({ ...contactForm, phone: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-purple-200 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -467,7 +448,7 @@ const Settings: React.FC<SettingsProps> = ({
                   <select
                     value={contactForm.relationship}
                     onChange={e => setContactForm({ ...contactForm, relationship: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl p-3 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 outline-none"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3 text-sm text-slate-800 focus:ring-2 focus:ring-purple-200 outline-none"
                   >
                     <option value="Friend">Friend</option>
                     <option value="Mother">Mother</option>
@@ -482,7 +463,7 @@ const Settings: React.FC<SettingsProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddingContact(false)}
-                  className="py-3 px-4 bg-slate-100 dark:bg-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 font-bold text-sm"
+                  className="py-3 px-4 bg-slate-100 rounded-2xl text-slate-600 font-bold text-sm"
                 >
                   Cancel
                 </button>
