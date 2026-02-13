@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!user) {
             await client.end();
-            return res.status(401).json({ message: 'Invalid email or password.' });
+            return res.status(404).json({ message: 'User not found.', code: 'USER_NOT_FOUND' });
         }
 
         // Close DB connection EARLY to free resources before CPU intensive work

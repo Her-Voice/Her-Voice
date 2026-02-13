@@ -8,12 +8,14 @@ interface AuthProps {
 }
 
 const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password'>('login');
+  const [resetSent, setResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
   const [showBiometricOverlay, setShowBiometricOverlay] = useState(false);
   const [biometricStatus, setBiometricStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -28,10 +30,19 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
 
     try {
       const isLogin = mode === 'login';
+      const isForgot = mode === 'forgot-password';
       const { email, password, name } = formData;
 
-      const endpoint = isLogin ? '/api/login' : '/api/signup';
-      const body = isLogin ? { email, password } : { email, password, name };
+      let endpoint = '/api/signup';
+      let body: any = { email, password, name };
+
+      if (isLogin) {
+        endpoint = '/api/login';
+        body = { email, password };
+      } else if (isForgot) {
+        endpoint = '/api/request-reset';
+        body = { email };
+      }
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -42,7 +53,23 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.code === 'USER_EXISTS') {
+          setError('USER_EXISTS');
+          setLoading(false); // Ensure loading is cleared
+          return;
+        }
+        if (data.code === 'USER_NOT_FOUND') {
+          setError('USER_NOT_FOUND');
+          setLoading(false); // Ensure loading is cleared
+          return;
+        }
         throw new Error(data.message || 'Authentication failed');
+      }
+
+      if (mode === 'forgot-password') {
+        setResetSent(true);
+        setLoading(false);
+        return;
       }
 
       if (data.token) {
@@ -131,20 +158,44 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
 
       <div className="bg-white/40 backdrop-blur-sm p-1.5 rounded-2xl flex mb-6 border border-white/60">
         <button
-          onClick={() => { setMode('login'); setError(null); }}
+          onClick={() => { setMode('login'); setError(null); setResetSent(false); }}
           className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'login' ? 'bg-white text-brand-rose shadow-sm' : 'text-brand-charcoal/60'}`}
         >
           Login
         </button>
         <button
-          onClick={() => { setMode('signup'); setError(null); }}
+          onClick={() => { setMode('signup'); setError(null); setResetSent(false); }}
           className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'signup' ? 'bg-white text-brand-rose shadow-sm' : 'text-brand-charcoal/60'}`}
         >
           Sign Up
         </button>
       </div>
 
-      {error && (
+      {error === 'USER_EXISTS' ? (
+        <div className="mb-6 p-4 bg-brand-rose/10 border border-brand-rose/20 rounded-2xl text-center animate-in slide-in-from-top-2">
+          <p className="text-xs font-bold text-brand-charcoal">It looks like you already have an account.</p>
+          <button
+            onClick={() => { setMode('login'); setError(null); }}
+            className="text-xs font-black text-brand-rose uppercase tracking-widest mt-2 hover:underline"
+          >
+            Sign in here
+          </button>
+        </div>
+      ) : error === 'USER_NOT_FOUND' ? (
+        <div className="mb-6 p-4 bg-brand-rose/10 border border-brand-rose/20 rounded-2xl text-center animate-in slide-in-from-top-2">
+          <p className="text-xs font-bold text-brand-charcoal">We couldn't find an account with that email.</p>
+          <button
+            onClick={() => { setMode('signup'); setError(null); }}
+            className="text-xs font-black text-brand-rose uppercase tracking-widest mt-2 hover:underline"
+          >
+            Create one now
+          </button>
+        </div>
+      ) : resetSent ? (
+        <div className="mb-6 p-4 bg-green-50/80 border border-green-100 rounded-2xl animate-in slide-in-from-top-2 text-center">
+          <p className="text-xs font-bold text-green-600">Check your email for the reset link.</p>
+        </div>
+      ) : error && (
         <div className="mb-6 p-4 bg-red-50/80 border border-red-100 rounded-2xl animate-in slide-in-from-top-2 text-center">
           <p className="text-xs font-bold text-red-500">{error}</p>
         </div>
@@ -184,36 +235,61 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-brand-charcoal/60 uppercase tracking-widest px-2">Password</label>
-          <div className="relative">
-            <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-brand-charcoal/30"></i>
-            <input
-              required
-              type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={e => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-white/60 border border-white/80 rounded-2xl py-4 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-brand-rose/10 transition-all text-brand-charcoal font-medium"
-            />
-          </div>
+          {mode !== 'forgot-password' && (
+            <>
+              <label className="text-[10px] font-black text-brand-charcoal/60 uppercase tracking-widest px-2">Password</label>
+              <div className="relative">
+                <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-brand-charcoal/30"></i>
+                <input
+                  required
+                  type={passwordVisible ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full bg-white/60 border border-white/80 rounded-2xl py-4 pl-12 pr-12 text-sm outline-none focus:ring-2 focus:ring-brand-rose/10 transition-all text-brand-charcoal font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-charcoal/30 hover:text-brand-charcoal/60 transition-colors"
+                >
+                  <i className={`fa-solid ${passwordVisible ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
+              {mode === 'signup' && formData.password && formData.password.length < 6 && (
+                <p className="text-[10px] font-bold text-orange-400 px-2 pt-1 animate-in fade-in slide-in-from-top-1">
+                  <i className="fa-solid fa-circle-info mr-1"></i>
+                  Password must be at least 6 characters
+                </p>
+              )}
+            </>
+          )}
         </div>
 
         <div className="flex items-center justify-between px-2">
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${rememberMe ? 'bg-brand-rose border-brand-rose' : 'bg-white border-brand-charcoal/10 group-hover:border-brand-rose/30'}`}>
-              <input
-                type="checkbox"
-                className="hidden"
-                checked={rememberMe}
-                onChange={() => setRememberMe(!rememberMe)}
-              />
-              {rememberMe && <i className="fa-solid fa-check text-[10px] text-white"></i>}
-            </div>
-            <span className="text-xs font-bold text-brand-charcoal select-none">Remember Me</span>
-          </label>
+          {mode !== 'forgot-password' && (
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${rememberMe ? 'bg-brand-rose border-brand-rose' : 'bg-white border-brand-charcoal/10 group-hover:border-brand-rose/30'}`}>
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe(!rememberMe)}
+                />
+                {rememberMe && <i className="fa-solid fa-check text-[10px] text-white"></i>}
+              </div>
+              <span className="text-xs font-bold text-brand-charcoal select-none">Remember Me</span>
+            </label>
+          )}
 
           {mode === 'login' && (
-            <button type="button" className="text-xs font-black text-brand-rose hover:underline uppercase tracking-tighter">Forgot Password?</button>
+            <button
+              type="button"
+              onClick={() => { setMode('forgot-password'); setError(null); }}
+              className="text-xs font-black text-brand-rose hover:underline uppercase tracking-tighter"
+            >
+              Forgot Password?
+            </button>
           )}
         </div>
 
@@ -226,9 +302,19 @@ const Auth: React.FC<AuthProps> = ({ onLogin, biometricEnabled }) => {
             {loading ? (
               <i className="fa-solid fa-circle-notch animate-spin"></i>
             ) : (
-              mode === 'login' ? 'LOGIN' : 'CREATE ACCOUNT'
+              mode === 'login' ? 'LOGIN' : mode === 'signup' ? 'CREATE ACCOUNT' : 'SEND RESET LINK'
             )}
           </button>
+
+          {mode === 'forgot-password' && (
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setError(null); setResetSent(false); }}
+              className="w-full py-4 text-xs font-black text-brand-charcoal/60 hover:text-brand-charcoal uppercase tracking-widest transition-colors"
+            >
+              Back to Login
+            </button>
+          )}
 
           {mode === 'login' && biometricEnabled && (
             <button

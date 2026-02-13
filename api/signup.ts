@@ -83,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const existingUserResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
         if (existingUserResult.rows.length > 0) {
             await client.end();
-            return res.status(400).json({ message: 'User already exists.' });
+            return res.status(409).json({ message: 'User already exists.', code: 'USER_EXISTS' });
         }
 
         const resInsert = await client.query(
