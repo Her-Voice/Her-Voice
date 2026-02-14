@@ -1,8 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import pool from '../lib/db'; // Import the pool
+import { Client } from 'pg';
 import crypto from 'crypto';
 
-// --- Inline Auth Utils (Preserved) ---
+// --- Inline Auth Utils ---
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_change_me_in_prod';
 const SALT_LENGTH = 16;
 const HASH_LENGTH = 64;
@@ -68,35 +68,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ message: 'Email, password, and name are required.' });
     }
 
+    // Hash password (Lightweight PBKDF2) - BEFORE DB connection
+    const hashedPassword = await hashPassword(password);
+
+    const client = new Client({
+        connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+        ssl: { rejectUnauthorized: false }
+    });
+
     try {
-        // Hash password BEFORE DB interaction
-        const hashedPassword = await hashPassword(password);
+        await client.connect();
 
-        // Check if user exists using the pool
-        const existingUserResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-
+        // Check existing
+        const existingUserResult = await client.query('SELECT * FROM users WHERE email = $1', [email]);
         if (existingUserResult.rows.length > 0) {
-            // No client.end() needed
-            return res.status(409).json({ // Changed to 409 Conflict (standard for "already exists")
-                message: 'User already exists.',
-                code: 'USER_EXISTS' // Added code for your frontend "Forgot Password?" helper
-            });
+            await client.end();
+            return res.status(409).json({ message: 'User already exists.', code: 'USER_EXISTS' });
         }
 
-        // Insert new user
-        const resInsert = await pool.query(
+        const resInsert = await client.query(
             "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id",
             [name, email, hashedPassword]
         );
         const newUser = { id: resInsert.rows[0].id, email, name };
 
+        await client.end();
+
         // Generate Token
         const token = signToken({ id: newUser.id, email: newUser.email });
 
         return res.status(200).json({ message: 'User registered successfully.', user: newUser, token });
-
     } catch (error: any) {
-        console.error('Signup error:', error);
         return res.status(500).json({ message: 'Signup failed', error: error.message });
     }
 }
