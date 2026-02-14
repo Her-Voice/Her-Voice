@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { Client } from 'pg';
+import pool from '../lib/db';
 import crypto from 'crypto';
 
 // --- Inline Auth Utils ---
@@ -60,26 +60,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-        ssl: { rejectUnauthorized: false }
-    });
+
 
     try {
-        await client.connect();
+
 
         // Find user by email
         const query = 'SELECT * FROM users WHERE email = $1';
-        const result = await client.query(query, [email]);
+        const result = await pool.query(query, [email]);
         const user = result.rows[0];
 
         if (!user) {
-            await client.end();
+
             return res.status(404).json({ message: 'User not found.', code: 'USER_NOT_FOUND' });
         }
 
         // Close DB connection EARLY to free resources before CPU intensive work
-        await client.end();
+
 
         // Compare password (Lightweight PBKDF2)
         const isPasswordValid = await verifyPassword(password, user.password);
@@ -102,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error) {
         console.error('Login error:', error);
-        await client.end().catch(() => { });
+
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 }

@@ -1,8 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { Client } from 'pg';
+import pool from '../lib/db'; // Import the pool
 import crypto from 'crypto';
 
-// --- Inline Auth Utils ---
+// --- Inline Auth Utils (Preserved) ---
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_change_me_in_prod';
 
 function base64UrlDecode(str: string): string {
@@ -63,16 +63,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(401).json({ message: 'Invalid token.' });
         }
 
-        const client = new Client({
-            connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
-            ssl: { rejectUnauthorized: false }
-        });
-
-        await client.connect();
+        // Use pool for query
         const query = 'SELECT id, name, email FROM users WHERE id = $1';
-        const result = await client.query(query, [decoded.id]);
+        const result = await pool.query(query, [decoded.id]);
         const user = result.rows[0];
-        await client.end();
+
+        // No client.end() needed
 
         if (!user) {
             return res.status(401).json({ message: 'User not found.' });
